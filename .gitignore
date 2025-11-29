@@ -8,5 +8,3 @@
 
 # Environment variables
 .env
-/client/.env
-/server/.env
