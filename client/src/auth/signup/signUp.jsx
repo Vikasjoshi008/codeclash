@@ -20,7 +20,7 @@ function Signup() {
 
     if (data.token) {
       localStorage.setItem("token", data.token);
-      navigate("/battle");
+      navigate("/dashboard");
     } else {
       alert(data.message);
     }

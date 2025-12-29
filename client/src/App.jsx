@@ -6,6 +6,9 @@ import Login from "./auth/login/login";
 import Signup from "./auth/signup/signUp";
 import PrivateRoute from "./components/PrivateRoute";
 import BattleArena from "./pages/BattleArena";
+import Dashboard from "./pages/Dashboard";
+import Practice from "./pages/Practice";
+import OneVsOne from "./pages/OneVsOne";
 
 function App() {
 
@@ -15,7 +18,23 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/battle" element={<BattleArena/>} />
+        <Route path="/dashboard" 
+              element={ 
+                <PrivateRoute>
+                  <Dashboard/>
+                </PrivateRoute>} />
+        <Route path="/battle/1v1"
+              element={
+                <PrivateRoute>
+                  <OneVsOne />
+                </PrivateRoute> }/>
+                <Route
+                  path="/practice"
+                  element={
+                    <PrivateRoute>
+                      <Practice />
+                    </PrivateRoute>
+                  } />
       </Routes>
     </BrowserRouter>
   )
