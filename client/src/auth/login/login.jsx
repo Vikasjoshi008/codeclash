@@ -1,42 +1,5 @@
-// import { useState } from "react";
-// import { login } from "../../services/authService";
-// import { Navigate, useNavigate } from "react-router-dom";
-
-// function Login() {
-//   const [form, setForm] = useState({
-//     email: "",
-//     password: ""
-//   });
-//   const navigate=useNavigate();
-
-//   const handleChange = (e) => {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     const data = await login(form);
-
-//     if (data.token) {
-//       localStorage.setItem("token", data.token);
-//       navigate("/dashboard");
-//     } else {
-//       alert(data.message);
-//     }
-//   };
-
-//   return (
-//     <form onSubmit={handleSubmit}>
-//       <input name="email" onChange={handleChange} placeholder="Email" /><br /><br />
-//       <input type="password" name="password" onChange={handleChange} placeholder="Password" /><br />br
-//       <button type="submit">Login</button>
-//     </form>
-//   );
-// }
-
-// export default Login;
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { login } from "../../services/authService";
 
@@ -55,43 +18,45 @@ const Login = () => {
 
     try {
       const data = await login(form);
-
       if (data.token) {
         localStorage.setItem("token", data.token);
         navigate("/dashboard");
       } else {
         setError(data.message || "Invalid credentials");
       }
-    } catch (err) {
-      setError("Server error. Try again later.");
+    } catch {
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#020617] via-[#0f172a] to-[#020617]">
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md bg-gray-800 p-8 rounded-2xl shadow-xl"
+        initial={{ opacity: 0, scale: 0.95, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-8"
       >
-        <h2 className="text-3xl font-bold text-center text-white mb-6">
-          Login to CodeClash
-        </h2>
+        <h1 className="text-3xl font-bold text-white text-center">
+          Welcome back ⚔️
+        </h1>
+        <p className="text-gray-400 text-center mt-2">
+          Login to continue to <span className="text-indigo-400">CodeClash</span>
+        </p>
 
         {error && (
-          <p className="bg-red-500/10 text-red-400 text-sm p-3 rounded mb-4">
+          <div className="mt-4 rounded-lg bg-red-500/10 text-red-400 text-sm p-3">
             {error}
-          </p>
+          </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <input
             type="email"
-            placeholder="Email"
-            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+            placeholder="Email address"
+            className="w-full rounded-lg bg-black/40 px-4 py-3 text-white placeholder-gray-400 outline-none border border-white/10 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition"
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
           />
@@ -100,34 +65,40 @@ const Login = () => {
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Password"
-              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-indigo-500 outline-none"
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full rounded-lg bg-black/40 px-4 py-3 text-white placeholder-gray-400 outline-none border border-white/10 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition"
+              onChange={(e) =>
+                setForm({ ...form, password: e.target.value })
+              }
               required
             />
-            <span
-              className="absolute right-4 top-3 cursor-pointer text-gray-400"
+            <button
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-3 text-gray-400 hover:text-white transition"
             >
-              {showPassword ? "🙈" : "👁️"}
-            </span>
+              👁️
+            </button>
           </div>
 
           <button
             disabled={loading}
-            className="w-full flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white py-3 rounded-lg font-semibold transition"
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60 transition"
           >
             {loading ? (
-              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
             ) : (
               "Login"
             )}
           </button>
         </form>
 
-        <p className="text-gray-400 text-sm text-center mt-4">
-          Don’t have an account?{" "}
-          <Link to="/signup" className="text-indigo-400 hover:underline">
-            Sign up
+        <p className="text-sm text-gray-400 text-center mt-6">
+          New to CodeClash?{" "}
+          <Link
+            to="/signup"
+            className="text-indigo-400 hover:text-indigo-300 transition"
+          >
+            Create an account
           </Link>
         </p>
       </motion.div>
@@ -136,5 +107,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
