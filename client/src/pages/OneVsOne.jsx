@@ -1,3 +1,4 @@
+import React from "react";
 const OneVsOne = () => {
   return (
     <div style={{ padding: "40px", textAlign: "center" }}>

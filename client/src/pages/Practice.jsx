@@ -1,3 +1,5 @@
+import React from "react";
+
 const Practice = () => {
   return (
     <div style={{ padding: "30px" }}>

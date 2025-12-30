@@ -1,3 +1,4 @@
+import React from 'react';
 import {BrowserRouter, Routes, Route} from "react-router-dom";
 import './App.css'
 
@@ -11,7 +12,6 @@ import Practice from "./pages/Practice";
 import OneVsOne from "./pages/OneVsOne";
 
 function App() {
-
   return (
     <BrowserRouter>
       <Routes>
