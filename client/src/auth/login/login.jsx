@@ -1,100 +1,3 @@
-// import React from 'react';
-// import { useState } from "react";
-// import { Link, useNavigate } from "react-router-dom";
-// import { motion } from "framer-motion";
-// import { login } from "../../services/authService";
-
-// const Login = () => {
-//   const [form, setForm] = useState({ email: "", password: "" });
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState("");
-//   const [showPassword, setShowPassword] = useState(false);
-
-//   const navigate = useNavigate();
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setLoading(true);
-//     setError("");
-
-//     try {
-//       const data = await login(form);
-//       if (data.token) {
-//         localStorage.setItem("token", data.token);
-//         navigate("/dashboard");
-//       } else {
-//         setError(data.message || "Invalid credentials");
-//       }
-//     } catch {
-//       setError("Something went wrong. Please try again.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="">
-//       <motion.div
-//         initial={{ opacity: 0, scale: 0.95, y: 30 }}
-//         animate={{ opacity: 1, scale: 1, y: 0 }}
-//         transition={{ duration: 0.6, ease: "easeOut" }}
-//         className=""
-//       >
-//         <h1 className="">
-//           Welcome back ⚔️
-//         </h1>
-//         <p className="">
-//           Login to continue to <span className="">CodeClash</span>
-//         </p>
-
-//         {error && (
-//           <div className="">
-//             {error}
-//           </div>
-//         )}
-
-//         <form onSubmit={handleSubmit}>
-//           <input
-//             type="email"
-//             placeholder="Email address"
-//             className=""
-//             onChange={(e) => setForm({ ...form, email: e.target.value })}
-//             required
-//           />
-
-//           <div className="">
-//             <input
-//               type={showPassword ? "text" : "password"}
-//               placeholder="Password"
-//               onChange={(e) =>
-//                 setForm({ ...form, password: e.target.value })
-//               }
-//               required
-//             />
-//             <button
-//               type="button"
-//               onClick={() => setShowPassword(!showPassword)}
-//             >
-//               👁️
-//             </button>
-//           </div>
-//           <button className="bg-sky-500 hover:bg-sky-700">Login</button>
-//         </form>
-
-//         <p>
-//           New to CodeClash?{" "}
-//           <Link
-//             to="/signup"
-//           >
-//             Create an account
-//           </Link>
-//         </p>
-//       </motion.div>
-//     </div>
-//   );
-// };
-
-// export default Login;
 import React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -181,7 +84,7 @@ const Login = () => {
               animate={{ opacity: 1, scale: 1 }}
               className="mb-6 p-4 bg-red-500 bg-opacity-10 border border-red-500 rounded-xl"
             >
-              <p className="text-red-400 text-sm flex items-center gap-2">
+              <p className="text-red-400 text-sm text-white flex items-center gap-2">
                 <span>⚠️</span>
                 {error}
               </p>
@@ -201,14 +104,13 @@ const Login = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-gray-400 text-lg">📧</span>
                 </div>
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="you@example.com"
-                  className="w-full pl-12 pr-4 py-3 bg-gray-900 bg-opacity-50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                  className="w-full pl-3 pr-4 py-3 bg-gray-900 bg-opacity-50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
                   required
                 />
               </div>
@@ -225,14 +127,13 @@ const Login = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="text-gray-400 text-lg">🔒</span>
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-12 py-3 bg-gray-900 bg-opacity-50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                  className="w-full pl-3 pr-12 py-3 bg-gray-900 bg-opacity-50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
                   required
                 />
                 <button
