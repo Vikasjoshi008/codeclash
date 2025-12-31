@@ -10,6 +10,7 @@ import BattleArena from "./pages/BattleArena";
 import Dashboard from "./pages/Dashboard";
 import Practice from "./pages/Practice";
 import OneVsOne from "./pages/OneVsOne";
+import AIPractice from './pages/AiPractice';
 
 function App() {
   return (
@@ -35,6 +36,13 @@ function App() {
                       <Practice />
                     </PrivateRoute>
                   } />
+                  <Route 
+                  path='/practice/:level'
+                  element={
+                    <PrivateRoute>
+                      <AIPractice/>
+                    </PrivateRoute>
+                  }/>
       </Routes>
     </BrowserRouter>
   )

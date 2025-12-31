@@ -4,19 +4,27 @@ const router = express.Router();
 
 router.post("/problem", async (req, res) => {
   try {
-    const { level , language} = req.body;
-
-    if (!level || !language) {
-      return res.status(400).json({ error: "Level and language required" });
-    }
-
+    const { level, language } = req.body;
     const problem = await generateProblem(level, language);
     res.json(problem);
-
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "AI generation failed" });
+    console.error("❌ AI error:", err.message);
+
+    res.json({
+      title: "Temporary Problem",
+      description: "Solve a basic problem while AI is unavailable.",
+      input_format: "Array of strings",
+      output_format: "Array of strings",
+      example: '["hello"] → ["Hello"]',
+      testCases: [
+        {
+          input: [["hello"]],
+          output: ["Hello"]
+        }
+      ]
+    });
   }
 });
+
 
 module.exports= router;

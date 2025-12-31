@@ -32,14 +32,24 @@ VERY IMPORTANT RULES:
 - Do NOT add markdown
 - Do NOT include solution
 
+Respond ONLY with valid JSON.
+Keep all values SHORT.
+
 JSON FORMAT:
 {
   "title": "string",
-  "description": "string (max 4 lines)",
+  "description": "string (max 2 lines)",
   "input_format": "string",
   "output_format": "string",
-  "example": "string"
+  "example": "string",
+  "testCases": [
+    {
+      "input": [],
+      "output": ""
+    }
+  ]
 }
+
 `;
 
   const response = await fetch(
@@ -55,8 +65,8 @@ JSON FORMAT:
           }
         ],
         generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 1000
+          temperature: 0.2,
+          maxOutputTokens: 1200
         },
       })
     }
