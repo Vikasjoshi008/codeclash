@@ -1,5 +1,5 @@
 const express = require("express");
-const { generateProblem } = require("../../utils/aiEngine");
+const { generateProblem } = require("../../utils/geminiEngine");
 const router = express.Router();
 
 router.post("/problem", async (req, res) => {
