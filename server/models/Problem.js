@@ -1,39 +1,32 @@
-// server/models/Problem.js
+const mongoose = require("mongoose");
 
-const mongoose = require('mongoose');
-
-const TestSchema = new mongoose.Schema({
-  input: {
-    type: String,
-    required: true,
+const testCaseSchema = new mongoose.Schema({
+  input: { 
+    type: Array, 
+    required: true 
   },
-  expectedOutput: {
-    type: String,
-    required: true,
-  },
-  isSecret: {
-    type: Boolean,
-    default: true, // Hide secret test cases from the user
-  },
+  output: { 
+    type: mongoose.Schema.Types.Mixed, 
+    required: true 
+  }
 });
 
-const ProblemSchema = new mongoose.Schema({
-  title: {
+const questionSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  language: {
     type: String,
-    required: true,
-    unique: true,
-  },
-  description: {
-    type: String,
-    required: true,
+    enum: ["javascript"],
+    required: true
   },
   difficulty: {
     type: String,
-    enum: ['Beginner', 'Intermediate', 'Advanced'],
-    default: 'Beginner',
+    enum: ["easy", "medium", "hard"],
+    required: true
   },
-  // Array of test cases for the judging system
-  testCases: [TestSchema],
+  order: Number, // 1,2,3... (important)
+  starterCode: String,
+  testCases: [testCaseSchema]
 });
 
-module.exports = mongoose.model('Problem', ProblemSchema);
+module.exports = mongoose.model("Question", questionSchema);

@@ -34,45 +34,6 @@ export default function AIPractice() {
   return () => { mounted = false };
 }, [level, language]);
 
-
-
-  // 🔥 RUN CODE LOGIC
-//  const runCode = () => {
-//     console.log("🟢 Run button clicked");
-//     console.log("code from monaco",code);
-//   try {
-//     setOutput("");
-//     setStatus("");
-
-//     const wrappedCode = `
-//       ${code}
-//       return typeof solve === "function" ? solve : null;
-//     `;
-
-//     const userSolve = new Function(wrappedCode)();
-
-//     if (!userSolve) {
-//       throw new Error("Function solve() not defined");
-//     }
-
-//     const testCase = problem.testCases[0];
-//     const result = userSolve(...testCase.input);
-
-//     setOutput(JSON.stringify(result));
-
-//     if (JSON.stringify(result) === JSON.stringify(testCase.output)) {
-//       setStatus("✅ Correct answer!");
-//     } else {
-//       setStatus(
-//         `❌ Wrong answer.\nExpected: ${JSON.stringify(testCase.output)}`
-//       );
-//     }
-
-//   } catch (err) {
-//     setStatus("❌ Error in your code");
-//     setOutput(err.message);
-//   }
-// };
 const runCode = () => {
   try {
     console.log("🟢 Run clicked");

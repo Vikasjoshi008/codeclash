@@ -5,6 +5,7 @@ const cors=require('cors');
 const connectDB= require("./config/db.js");
 const authRoutes=require("./routes/auth/auth.js");
 const aiRoutes=require("./routes/practice/practiceOnline.js");
+const questionsRoutes=require("./routes/questions.js");
 const app=express();
 const port=5000;
 
@@ -16,7 +17,7 @@ app.use(cors({
 
 app.use('/api/auth', authRoutes);
 app.use("/api/ai", aiRoutes);
-
+app.use("/api/questions", questionsRoutes);
 
 app.get("/", (req, res) => {
     res.send("codeclash server is running");
