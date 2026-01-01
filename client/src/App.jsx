@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Practice from "./pages/Practice";
 import OneVsOne from "./pages/OneVsOne";
 import AIPractice from './pages/AiPractice';
+import Question from './pages/Question';
 
 function App() {
   return (
@@ -43,6 +44,14 @@ function App() {
                       <AIPractice/>
                     </PrivateRoute>
                   }/>
+                  <Route 
+                  path='/practice/:difficulty/:order'
+                  element={
+                    <PrivateRoute>
+                      <Question />
+                    </PrivateRoute>
+                  }
+                  />
       </Routes>
     </BrowserRouter>
   )
