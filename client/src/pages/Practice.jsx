@@ -6,11 +6,27 @@ export default function Practice() {
   const [questions, setQuestions] = useState([]);
   const [language, setLanguage] = useState("javascript");
   const [difficulty, setDifficulty] = useState("easy");
+  const [currentOrder, setCurrentOrder]=useState(1);
   const navigate = useNavigate();
 
+  // useEffect(() => {
+  //   getQuestions(language, difficulty).then(setQuestions);
+  // }, [language, difficulty]);
   useEffect(() => {
-    getQuestions(language, difficulty).then(setQuestions);
-  }, [language, difficulty]);
+  async function load() {
+    const progressRes = await fetch(
+      `http://localhost:5000/api/progress?userId=USER_ID&language=${language}&difficulty=${difficulty}`
+    );
+    const progress = await progressRes.json();
+    setCurrentOrder(progress.currentOrder);
+
+    const qs = await getQuestions(language, difficulty);
+    setQuestions(qs);
+  }
+
+  load();
+}, [language, difficulty]);
+
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-8">
@@ -48,17 +64,26 @@ export default function Practice() {
           <p className="text-gray-400">No questions found</p>
         )}
 
-        {questions.map((q) => (
-          <button
-            key={q._id}
-            onClick={() =>
-              navigate(`/practice/${difficulty}/${q.order}`)
-            }
-            className="block w-full text-left bg-white/10 p-4 rounded hover:bg-white/20 transition"
-          >
-            {q.order}. {q.title}
-          </button>
-        ))}
+        {questions.map((q) => {
+            const locked = q.order > currentOrder;
+
+            return (
+              <button
+                key={q._id}
+                disabled={locked}
+                onClick={() =>
+                  navigate(`/practice/${difficulty}/${q.order}`)
+                }
+                className={`block w-full text-left p-4 rounded transition
+                  ${locked
+                    ? "bg-white/5 text-gray-500 cursor-not-allowed"
+                    : "bg-white/10 hover:bg-white/20"}
+                `}
+              >
+                {q.order}. {q.title} {locked && "🔒"}
+              </button>
+            );
+          })}
       </div>
     </div>
   );
