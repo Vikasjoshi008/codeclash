@@ -15,7 +15,7 @@ export default function Practice() {
   useEffect(() => {
   async function load() {
     const progressRes = await fetch(
-      `http://localhost:5000/api/progress?userId=USER_ID&language=${language}&difficulty=${difficulty}`
+      `http://localhost:5000/api/progress?userId=${userId}&language=${language}&difficulty=${difficulty}`
     );
     const progress = await progressRes.json();
     setCurrentOrder(progress.currentOrder);

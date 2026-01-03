@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose=require("mongoose");
 const UserProgress = require("../models/UserProgress");
 
 const router = express.Router();
@@ -9,6 +10,11 @@ router.get("/", async (req, res) => {
   if (!userId || !language || !difficulty) {
     return res.status(400).json({ message: "Missing parameters" });
   }
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid userId" });
+  }
+
 
   let progress = await UserProgress.findOne({
     userId,
