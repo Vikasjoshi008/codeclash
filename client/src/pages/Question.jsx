@@ -8,8 +8,8 @@ import { runCode } from "../services/executionAPI";
 export default function Question() {
   const { order } = useParams();
   const [question, setQuestion] = useState(null);
-  const [output, setOutput]=useState("");
-  const [error, setError] = useState("");
+  const [output, setOutput]=useState(null);
+  const [error, setError] = useState(null);
 
   const [code, setCode] = useState("");
   const navigate=useNavigate();
@@ -30,7 +30,7 @@ const handleRun = async() => {
   setError("");
 
   const res = await runCode(code, question._id, "javascript");
-
+  console.log("API RESPONSE:", res);
   if (res.stderr) {
     setError(res.stderr);
   } else {
@@ -81,17 +81,19 @@ const handleRun = async() => {
       >
         Mark as Solved
       </button>
-      {output && (
-      <pre className="mt-4 bg-black/50 p-4 rounded text-green-400">
+
+      {output !== null && output !== undefined && (
+      <pre className="mt-4 bg-black/70 p-4 rounded text-green-400">
         {output}
       </pre>
     )}
 
     {error && (
-      <pre className="mt-4 bg-black/50 p-4 rounded text-red-400">
+      <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">
         {error}
       </pre>
     )}
+
     </div>
     </div>
   );

@@ -5,6 +5,7 @@ const Question=require("../models/Problem");
 const router= express.Router();
 
 router.post("/", async (req, res) => {
+  console.log("POST /api/execute HIT");
   const { code, questionId, language } = req.body;
   const question = await Question.findById(questionId);
 
@@ -14,17 +15,24 @@ router.post("/", async (req, res) => {
 
   const testCase = question.testCases[0]; // visible test only
 
+  const wrappedCode = ` ${code}
+  const input = ${JSON.stringify(testCase.input)};
+  const output = solve(input);
+  console.log(JSON.stringify(output));
+  `;
+
   const result = await runCode({
-    code,
-    input: JSON.stringify(testCase.input),
+    code: wrappedCode,
+    input: "",
     language
   });
 
+
   res.json({
-    stdout: result.stdout,
-    stderr: result.stderr,
-    expected: testCase.output
-  });
+  fullResult: result,
+  stdout: result.stdout,
+  stderr: result.stderr
+});
 });
 
 module.exports = router;
