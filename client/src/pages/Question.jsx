@@ -3,10 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { getQuestion } from "../services/questionApi";
+import { runCode } from "../services/executionAPI";
 
 export default function Question() {
   const { order } = useParams();
   const [question, setQuestion] = useState(null);
+  const [output, setOutput]=useState("");
+  const [error, setError] = useState("");
+
   const [code, setCode] = useState("");
   const navigate=useNavigate();
   const userId= "6926ffccc0bebfe17f798806";
@@ -20,6 +24,20 @@ export default function Question() {
 
   if (!question) return <div>Loading...</div>;
 
+const handleRun = async() => {
+  console.log("button clicked");
+  setOutput("");
+  setError("");
+
+  const res = await runCode(code, question._id, "javascript");
+
+  if (res.stderr) {
+    setError(res.stderr);
+  } else {
+    setOutput(res.stdout);
+  }
+}
+
   const markAsDone = async() => {
   await fetch("http://localhost:5000/api/progress/advance", {
     method: "POST",
@@ -30,7 +48,6 @@ export default function Question() {
       difficulty: "easy"
     })
   });
-
   navigate(`/practice/easy/${Number(order) + 1}`);
 }
 
@@ -53,7 +70,7 @@ export default function Question() {
       <div className="flex gap-4 mt-4">
       <button
         className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
-        onClick={() => alert("Run will be added in Phase 3")}
+        onClick={handleRun}
       >
         Run Code
       </button>
@@ -64,6 +81,17 @@ export default function Question() {
       >
         Mark as Solved
       </button>
+      {output && (
+      <pre className="mt-4 bg-black/50 p-4 rounded text-green-400">
+        {output}
+      </pre>
+    )}
+
+    {error && (
+      <pre className="mt-4 bg-black/50 p-4 rounded text-red-400">
+        {error}
+      </pre>
+    )}
     </div>
     </div>
   );

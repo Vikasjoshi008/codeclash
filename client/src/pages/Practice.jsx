@@ -7,6 +7,8 @@ export default function Practice() {
   const [language, setLanguage] = useState("javascript");
   const [difficulty, setDifficulty] = useState("easy");
   const [currentOrder, setCurrentOrder]=useState(1);
+  const userId= "6926ffccc0bebfe17f798806";
+
   const navigate = useNavigate();
 
   // useEffect(() => {
