@@ -14,7 +14,7 @@ const questions=[
     starterCode: `function solve(words) {\n  \n}`,
     testCases: [
       {
-        input: [["hello", "world"]],
+        input: ["hello", "world"],
         output: ["Hello", "World"]
       }
     ]
@@ -28,7 +28,7 @@ const questions=[
     starterCode: `function solve(arr) {\n  \n}`,
     testCases: [
       {
-        input: [["abc", "def"]],
+        input: ["abc", "def"],
         output: "cbafed"
       }
     ]
