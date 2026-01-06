@@ -1,57 +1,50 @@
 const express = require("express");
-const runCode = require("../utils/judge0");
+const runCode = require("../utils/piston");
 const Question = require("../models/Problem");
 const router = express.Router();
-
 
 router.post("/", async (req, res) => {
   try {
     console.log("POST /api/execute HIT");
-    console.log("REQ BODY:", req.body);
 
     const { code, questionId, language } = req.body;
 
-    if (!code || !questionId || !language) {
-      return res.status(400).json({ error: "Missing parameters" });
-    }
-
     const question = await Question.findById(questionId);
-
     if (!question) {
       return res.status(404).json({ error: "Question not found" });
     }
 
-    if (!question.testCases || !question.testCases.length) {
-      return res.status(400).json({ error: "No test cases found" });
-    }
-
     const testCase = question.testCases[0];
-    console.log("TEST CASE:", testCase);
 
-  // const wrappedCode = `${code}`;
+    // 🔥 WRAP USER CODE
+    const wrappedCode = `
+${code}
+
+try {
+  const input = ${JSON.stringify(testCase.input)};
+  const output = solve(input);
+  console.log(JSON.stringify(output));
+} catch (err) {
+  console.error(err.message);
+}
+`;
 
     const result = await runCode({
-      code,
-      input: "",
+      code: wrappedCode,
+      input: testCase.input,
       language
     });
 
-    console.log("JUDGE0 RESULT:", result);
-
     res.json({
-    stdout: result.stdout || "",
-    stderr: result.stderr || result.compile_output || "",
-    status: result.status
-  });
-
+      stdout: result.run?.stdout || "",
+      stderr: result.run?.stderr || ""
+    });
 
   } catch (err) {
-    console.error("❌ EXECUTE ERROR:", err);
-    res.status(500).json({
-      error: "Code execution failed",
-      details: err.message
-    });
+    console.error("❌ Execute error:", err);
+    res.status(500).json({ error: "Execution failed", details: err.message });
   }
 });
+
 
 module.exports = router;
