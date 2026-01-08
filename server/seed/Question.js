@@ -13,7 +13,7 @@ const DIFFICULTY = "easy";
 
 async function generateQuestions() {
   const prompt = `
-Generate EXACTLY 60 UNIQUE coding questions.
+Generate EXACTLY 60 UNIQUE coding questions only.
 
 Language: ${LANGUAGE}
 Difficulty: ${DIFFICULTY}
@@ -55,7 +55,8 @@ Each object must have:
   const result = await model.generateContent(prompt);
   const text = result.response.text();
 
-  const questions = JSON.parse(text); // IMPORTANT
+  const parsed = JSON.parse(text); // IMPORTANT
+  const questions= parsed.slice(0, 60);
 
   return questions;
 }
