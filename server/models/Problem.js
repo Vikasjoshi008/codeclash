@@ -1,21 +1,56 @@
 const mongoose = require("mongoose");
 
-const questionSchema = new mongoose.Schema({
+const testCaseSchema = new mongoose.Schema({
+  input: mongoose.Schema.Types.Mixed,
+  output: mongoose.Schema.Types.Mixed,
+  hidden: { type: Boolean, default: false }
+});
+
+const problemSchema = new mongoose.Schema({
   title: String,
   description: String,
-  input: String,
-  output: String,
-  constaraints: String,
-  exapmples: Array,
-  language: String,
+  inputDescription: String,
+  outputDescription: String,
+  constraints: String,
+
+  examples: [
+    {
+      input: String,
+      output: String
+    }
+  ],
+
   starterCode: {
     javascript: String,
     python: String,
     java: String,
     cpp: String
   },
-  difficulty: String,
-  order: Number, 
+
+  testCases: [testCaseSchema],
+
+  language: {
+    type: String,
+    enum: [
+      "javascript", 
+      "python", 
+      "java", 
+      "cpp",
+      "c",
+      "csharp",
+      "ruby",
+      "php",
+      "typescript",
+    ],
+    required: true
+  },
+
+  difficulty: {
+    type: String,
+    enum: ["easy", "medium", "hard"]
+  },
+
+  order: Number
 });
 
-module.exports = mongoose.model("Question", questionSchema);
+module.exports = mongoose.model("Problem", problemSchema);

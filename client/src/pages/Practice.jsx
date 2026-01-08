@@ -35,13 +35,28 @@ export default function Practice() {
       <h1 className="text-3xl font-bold mb-6">Practice Coding</h1>
 
       {/* Language Selector */}
-      <select
-        value={language}
-        onChange={(e) => setLanguage(e.target.value)}
-        className="mb-4 bg-black/40 border border-white/20 px-4 py-2 rounded"
-      >
-        <option value="javascript">JavaScript</option>
-      </select>
+          <select
+      value={language}
+      onChange={(e) => setLanguage(e.target.value)}
+    >
+      {[
+        "javascript",
+        "python",
+        "java",
+        "cpp",
+        "c",
+        "csharp",
+        "go",
+        "ruby",
+        "php",
+        "typescript"
+      ].map(lang => (
+        <option key={lang} value={lang}>
+          {lang.toUpperCase()}
+        </option>
+      ))}
+    </select>
+
 
       {/* Difficulty Selector */}
       <div className="flex gap-4 mb-6">
