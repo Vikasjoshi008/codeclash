@@ -18,7 +18,8 @@ export default function Question() {
   useEffect(() => {
     getQuestion("javascript", "easy", order).then(q => {
       setQuestion(q);
-      setCode(q.starterCode);
+      // setCode(q.starterCode);
+      setCode(q.starterCode?.javascript || "");
     });
   }, [order]);
 
@@ -39,9 +40,13 @@ const handleRun = async() => {
 }
 
   const markAsDone = async() => {
+    const token=localStorage.getItem("token");
   await fetch("http://localhost:5000/api/progress/advance", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json" 
+    },
     body: JSON.stringify({
       userId: userId,
       language: "javascript",
@@ -52,22 +57,68 @@ const handleRun = async() => {
 }
 
   return (
-    <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
-      <div className="p-6">
-        <h2 className="text-xl font-bold">{question.title}</h2>
-        <p className="mt-3">{question.description}</p>
-      </div>
+    // <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
+    //   <div className="p-6">
+    //     <h2 className="text-xl font-bold">{question.title}</h2>
+    //     <p className="mt-3">{question.description}</p>
+    //   </div>
 
-      <div className="p-4">
-        <Editor
-          height="90vh"
-          theme="vs-dark"
-          language="javascript"
-          value={code}
-          onChange={v => setCode(v ?? "")}
-        />
-      </div>
-      <div className="flex gap-4 mt-4">
+    //   <div className="p-4">
+    //     <Editor
+    //       height="90vh"
+    //       theme="vs-dark"
+    //       language="javascript"
+    //       value={code}
+    //       onChange={v => setCode(v ?? "")}
+    //     />
+    //   </div>
+    //   <div className="flex gap-4 mt-4">
+    //   <button
+    //     className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
+    //     onClick={handleRun}
+    //   >
+    //     Run Code
+    //   </button>
+
+    //   <button
+    //     className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+    //     onClick={markAsDone}
+    //   >
+    //     Mark as Solved
+    //   </button>
+
+    //   {output !== null && output !== undefined && (
+    //   <pre className="mt-4 bg-black/70 p-4 rounded text-green-400">
+    //     {output}
+    //   </pre>
+    // )}
+
+    // {error && (
+    //   <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">
+    //     {error}
+    //   </pre>
+    // )}
+
+    // </div>
+    // </div>
+    <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
+  {/* LEFT: Question */}
+  <div className="p-6">
+    <h2 className="text-xl font-bold">{question.title}</h2>
+    <p className="mt-3">{question.description}</p>
+  </div>
+
+  {/* RIGHT: Editor + Controls */}
+  <div className="p-4 flex flex-col">
+    <Editor
+      height="70vh"
+      theme="vs-dark"
+      language="javascript"
+      value={code}
+      onChange={v => setCode(v ?? "")}
+    />
+
+    <div className="flex gap-4 mt-4">
       <button
         className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
         onClick={handleRun}
@@ -81,8 +132,9 @@ const handleRun = async() => {
       >
         Mark as Solved
       </button>
+    </div>
 
-      {output !== null && output !== undefined && (
+    {output && (
       <pre className="mt-4 bg-black/70 p-4 rounded text-green-400">
         {output}
       </pre>
@@ -93,8 +145,8 @@ const handleRun = async() => {
         {error}
       </pre>
     )}
+  </div>
+</div>
 
-    </div>
-    </div>
   );
 }

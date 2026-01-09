@@ -11,9 +11,6 @@ export default function Practice() {
 
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   getQuestions(language, difficulty).then(setQuestions);
-  // }, [language, difficulty]);
   useEffect(() => {
   async function load() {
     const progressRes = await fetch(
@@ -35,7 +32,7 @@ export default function Practice() {
       <h1 className="text-3xl font-bold mb-6">Practice Coding</h1>
 
       {/* Language Selector */}
-          <select
+      <select
       value={language}
       onChange={(e) => setLanguage(e.target.value)}
     >
