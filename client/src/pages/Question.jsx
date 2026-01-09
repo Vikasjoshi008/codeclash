@@ -10,6 +10,8 @@ export default function Question() {
   const [question, setQuestion] = useState(null);
   const [output, setOutput]=useState(null);
   const [error, setError] = useState(null);
+  const [isSolved, setIsSolved] = useState(false);
+
 
   const [code, setCode] = useState("");
   const navigate=useNavigate();
@@ -18,10 +20,18 @@ export default function Question() {
   useEffect(() => {
     getQuestion("javascript", "easy", order).then(q => {
       setQuestion(q);
-      // setCode(q.starterCode);
       setCode(q.starterCode?.javascript || "");
     });
   }, [order]);
+
+  useEffect(() => {
+  fetch(`http://localhost:5000/api/progress/${userId}/javascript/easy`)
+    .then(res => res.json())
+    .then(p => {
+      setIsSolved(p.solvedOrders.includes(Number(order)));
+    });
+}, [order]);
+
 
   if (!question) return <div>Loading...</div>;
 
@@ -50,57 +60,14 @@ const handleRun = async() => {
     body: JSON.stringify({
       userId: userId,
       language: "javascript",
-      difficulty: "easy"
+      difficulty: "easy",
+      order: Number(order)
     })
   });
   navigate(`/practice/easy/${Number(order) + 1}`);
 }
 
   return (
-    // <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
-    //   <div className="p-6">
-    //     <h2 className="text-xl font-bold">{question.title}</h2>
-    //     <p className="mt-3">{question.description}</p>
-    //   </div>
-
-    //   <div className="p-4">
-    //     <Editor
-    //       height="90vh"
-    //       theme="vs-dark"
-    //       language="javascript"
-    //       value={code}
-    //       onChange={v => setCode(v ?? "")}
-    //     />
-    //   </div>
-    //   <div className="flex gap-4 mt-4">
-    //   <button
-    //     className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
-    //     onClick={handleRun}
-    //   >
-    //     Run Code
-    //   </button>
-
-    //   <button
-    //     className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
-    //     onClick={markAsDone}
-    //   >
-    //     Mark as Solved
-    //   </button>
-
-    //   {output !== null && output !== undefined && (
-    //   <pre className="mt-4 bg-black/70 p-4 rounded text-green-400">
-    //     {output}
-    //   </pre>
-    // )}
-
-    // {error && (
-    //   <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">
-    //     {error}
-    //   </pre>
-    // )}
-
-    // </div>
-    // </div>
     <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
   {/* LEFT: Question */}
   <div className="p-6">
@@ -144,6 +111,12 @@ const handleRun = async() => {
       <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">
         {error}
       </pre>
+    )}
+
+    {isSolved && (
+      <div className="mb-3 p-3 rounded bg-green-900 text-green-300">
+        ✅ You already solved this question
+      </div>
     )}
   </div>
 </div>

@@ -35,22 +35,34 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/advance", async (req, res) => {
-  const { userId, language, difficulty } = req.body;
+  const { userId, language, difficulty, order } = req.body;
 
-  const progress = await UserProgress.findOne({
-    userId,
-    language,
-    difficulty
-  });
+  let progress = await Progress.findOne({ userId, language, difficulty });
 
   if (!progress) {
-    return res.status(404).json({ message: "Progress not found" });
+    progress = new Progress({
+      userId,
+      language,
+      difficulty,
+      solvedOrders: [],
+      currentOrder: 1
+    });
   }
 
-  progress.currentOrder += 1;
+  // prevent duplicates
+  if (!progress.solvedOrders.includes(order)) {
+    progress.solvedOrders.push(order);
+  }
+
+  // unlock next
+  if (order >= progress.currentOrder) {
+    progress.currentOrder = order + 1;
+  }
+
   await progress.save();
 
   res.json(progress);
 });
+
 
 module.exports = router;

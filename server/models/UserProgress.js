@@ -17,6 +17,9 @@ const userProgressSchema = new mongoose.Schema(
       enum: ["easy", "medium", "hard"],
       required: true
     },
+    solvedOrders: {
+      type: [Number],
+    },
     currentOrder: {
       type: Number,
       default: 1
