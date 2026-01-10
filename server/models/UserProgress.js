@@ -19,6 +19,7 @@ const userProgressSchema = new mongoose.Schema(
     },
     solvedOrders: {
       type: [Number],
+      default: []
     },
     currentOrder: {
       type: Number,

@@ -12,17 +12,25 @@ const LANGUAGE = "javascript";
 const DIFFICULTY = "easy";
 
 async function generateQuestions() {
-  const prompt = `
+const prompt = `
 Generate EXACTLY 60 UNIQUE coding questions only.
 
 Language: ${LANGUAGE}
 Difficulty: ${DIFFICULTY}
 
+IMPORTANT JSON RULES (STRICT):
+- Output MUST be valid JSON parsable by JSON.parse()
+- DO NOT use undefined, NaN, Infinity
+- Use null instead of undefined
+- Use only: string, number, boolean, null, array, object
+- testCases.input MUST be valid JSON
+- NEVER include JavaScript-only values
+
 Return STRICT JSON ARRAY ONLY.
 NO text outside JSON.
 NO markdown.
 
-Each object must have:
+Each object must have this EXACT shape:
 
 {
   "title": "",
@@ -46,29 +54,12 @@ Each object must have:
     "typescript": ""
   },
   "testCases": [
-  {
-    "input": [1, 2, 3, 4, 5],
-    "output": 15,
-    "hidden": false
-  },
-  {
-    "input": [10, -5, 3],
-    "output": 8,
-    "hidden": true
-  }
-]
-
-IMPORTANT JSON RULES (STRICT):
-- Output MUST be valid JSON parsable by JSON.parse()
-- DO NOT use undefined, NaN, Infinity
-- Use null instead of undefined
-- Use only: string, number, boolean, null, array, object
-- testCases.input MUST be valid JSON
-- NEVER include JavaScript-only values
-
-
+    { "input": [1,2,3,4,5], "output": 15, "hidden": false },
+    { "input": [10,-5,3], "output": 8, "hidden": true }
+  ]
 }
 `;
+
 
   const result = await model.generateContent(prompt);
   const text = result.response.text();
@@ -103,25 +94,31 @@ function validateQuestion(q, index) {
   return q;
 }
 
+function normalizeExamples(examples) {
+  if (!Array.isArray(examples)) return [];
+  return examples.map(ex => ({
+    input: JSON.stringify(ex.input),
+    output: JSON.stringify(ex.output)
+  }));
+}
 
 function normalizeTestCases(testCases) {
   return testCases.map(tc => {
     let input = tc.input;
 
-    // If input is string → convert to array
     if (typeof input === "string") {
-      input = input
-        .trim()
-        .split(/\s+/)
-        .map(Number);
+      const trimmed = input.trim();
+
+      // convert ONLY if space-separated numbers
+      if (/^-?\d+(\s+-?\d+)+$/.test(trimmed)) {
+        input = trimmed.split(/\s+/).map(Number);
+      }
     }
 
-    return {
-      ...tc,
-      input
-    };
+    return { ...tc, input };
   });
 }
+
 
 
 async function seed() {
@@ -130,12 +127,13 @@ async function seed() {
   const questions = await generateQuestions();
 
   // await Problem.deleteMany({ language: LANGUAGE, difficulty: DIFFICULTY });
-  await Problem.deleteMany({ language: "javascript", difficulty: "easy" });
+  await Problem.deleteMany({ language: LANGUAGE, difficulty: DIFFICULTY });
 
   await Problem.insertMany(
     questions.map((q, index) =>
       validateQuestion({
       ...q,
+      examples: normalizeExamples(q.examples),
       testCases: normalizeTestCases(q.testCases),
       language: LANGUAGE,
       difficulty: DIFFICULTY,

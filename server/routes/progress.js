@@ -37,10 +37,10 @@ router.get("/", async (req, res) => {
 router.post("/advance", async (req, res) => {
   const { userId, language, difficulty, order } = req.body;
 
-  let progress = await Progress.findOne({ userId, language, difficulty });
+  let progress = await UserProgress.findOne({ userId, language, difficulty });
 
   if (!progress) {
-    progress = new Progress({
+    progress = new UserProgress({
       userId,
       language,
       difficulty,
@@ -50,6 +50,10 @@ router.post("/advance", async (req, res) => {
   }
 
   // prevent duplicates
+  if (!progress.solvedOrders.includes(order)) {
+    progress.solvedOrders.push(order);
+  }
+   // ✅ add solved order if not already present
   if (!progress.solvedOrders.includes(order)) {
     progress.solvedOrders.push(order);
   }

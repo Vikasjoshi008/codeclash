@@ -65,6 +65,7 @@ const handleRun = async() => {
     })
   });
   navigate(`/practice/easy/${Number(order) + 1}`);
+  window.location.reload();
 }
 
   return (
@@ -107,16 +108,16 @@ const handleRun = async() => {
       </pre>
     )}
 
-    {error && (
-      <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">
-        {error}
-      </pre>
-    )}
-
     {isSolved && (
       <div className="mb-3 p-3 rounded bg-green-900 text-green-300">
         ✅ You already solved this question
       </div>
+    )}
+
+    {error && (
+      <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">
+        {error}
+      </pre>
     )}
   </div>
 </div>
