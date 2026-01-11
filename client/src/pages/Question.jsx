@@ -39,9 +39,6 @@ export default function Question() {
     });
 }, [order]);
 
-
-  if (!question) return <div>Loading...</div>;
-
 const handleRun = async() => {
   console.log("button clicked");
   setOutput("");
