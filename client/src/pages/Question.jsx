@@ -18,6 +18,13 @@ export default function Question() {
   const userId= "6926ffccc0bebfe17f798806";
 
   useEffect(() => {
+  setOutput(null);
+  setError(null);
+  setIsSolved(false);
+}, [order]);
+
+
+  useEffect(() => {
     getQuestion("javascript", "easy", order).then(q => {
       setQuestion(q);
       setCode(q.starterCode?.javascript || "");
@@ -28,7 +35,7 @@ export default function Question() {
   fetch(`http://localhost:5000/api/progress/${userId}/javascript/easy`)
     .then(res => res.json())
     .then(p => {
-      setIsSolved(p.solvedOrders.includes(Number(order)));
+      setIsSolved(Number(order) < p.solvedOrders);
     });
 }, [order]);
 
@@ -65,7 +72,6 @@ const handleRun = async() => {
     })
   });
   navigate(`/practice/easy/${Number(order) + 1}`);
-  window.location.reload();
 }
 
   return (
@@ -108,11 +114,11 @@ const handleRun = async() => {
       </pre>
     )}
 
-    {isSolved && (
+    {/* {isSolved && (
       <div className="mb-3 p-3 rounded bg-green-900 text-green-300">
         ✅ You already solved this question
       </div>
-    )}
+    )} */}
 
     {error && (
       <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">

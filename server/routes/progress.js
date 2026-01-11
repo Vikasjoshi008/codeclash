@@ -34,6 +34,25 @@ router.get("/", async (req, res) => {
   res.json(progress);
 });
 
+router.get("/:userId/:language/:difficulty", async (req, res) => {
+  const { userId, language, difficulty } = req.params;
+
+  const progress = await UserProgress.findOne({
+    userId,
+    language,
+    difficulty
+  });
+
+  if (!progress) {
+    return res.json({ currentOrder: 1 });
+  }
+
+  res.json({
+    currentOrder: progress.currentOrder
+  });
+});
+
+
 router.post("/advance", async (req, res) => {
   const { userId, language, difficulty, order } = req.body;
 
