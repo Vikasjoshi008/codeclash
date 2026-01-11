@@ -25,7 +25,6 @@ export default function Question() {
   setHasRunSuccessfully(false);
 }, [order]);
 
-
   useEffect(() => {
     getQuestion("javascript", "easy", order).then(q => {
       setQuestion(q);
@@ -74,8 +73,15 @@ const handleRun = async() => {
   });
   navigate(`/practice/easy/${Number(order) + 1}`);
 }
-
+if (!question) {
   return (
+    <div className="min-h-screen flex items-center justify-center text-white">
+      Loading question...
+    </div>
+  );
+}
+
+return (
     <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
   {/* LEFT: Question */}
   <div className="p-6">
