@@ -53,6 +53,7 @@ const handleRun = async() => {
   } else {
     setOutput(res.stdout);
     setHasRunSuccessfully(true);
+    setIsSolved(true);
   }
 }
 
