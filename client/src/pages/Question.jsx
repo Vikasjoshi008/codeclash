@@ -11,6 +11,7 @@ export default function Question() {
   const [output, setOutput]=useState(null);
   const [error, setError] = useState(null);
   const [isSolved, setIsSolved] = useState(false);
+  const [hasRunSuccessfully, setHasRunSuccessfully] = useState(false);
 
 
   const [code, setCode] = useState("");
@@ -21,6 +22,7 @@ export default function Question() {
   setOutput(null);
   setError(null);
   setIsSolved(false);
+  setHasRunSuccessfully(false);
 }, [order]);
 
 
@@ -48,8 +50,10 @@ const handleRun = async() => {
   console.log("API RESPONSE:", res);
   if (res.stderr) {
     setError(res.stderr);
+    setHasRunSuccessfully(false);
   } else {
     setOutput(res.stdout);
+    setHasRunSuccessfully(true);
   }
 }
 
@@ -98,11 +102,24 @@ const handleRun = async() => {
       </button>
 
       <button
-        className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+        className={`px-4 py-2 rounded ${
+          hasRunSuccessfully && !isSolved
+            ? "bg-green-600 hover:bg-green-700"
+            : "bg-gray-600 cursor-not-allowed"
+        }`}
+        disabled={!hasRunSuccessfully || isSolved}
         onClick={markAsDone}
+        title={
+          !hasRunSuccessfully
+            ? "Solve this question to mark as done"
+            : isSolved
+            ? "Already solved"
+            : "Mark as solved"
+        }
       >
         Mark as Solved
       </button>
+
     </div>
 
     {output && (
@@ -111,11 +128,11 @@ const handleRun = async() => {
       </pre>
     )}
 
-    {/* {isSolved && (
+    {isSolved && (
       <div className="mb-3 p-3 rounded bg-green-900 text-green-300">
         ✅ You already solved this question
       </div>
-    )} */}
+    )}
 
     {error && (
       <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">
