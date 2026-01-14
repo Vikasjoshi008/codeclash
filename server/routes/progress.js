@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose=require("mongoose");
 const UserProgress = require("../models/UserProgress");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -34,8 +35,9 @@ router.get("/", async (req, res) => {
   res.json(progress);
 });
 
-router.get("/:userId/:language/:difficulty", async (req, res) => {
-  const { userId, language, difficulty } = req.params;
+router.get("/:language/:difficulty", auth ,async (req, res) => {
+  const userId = req.user.id;
+  const { language, difficulty } = req.params;
 
   const progress = await UserProgress.findOne({
     userId,
@@ -53,8 +55,9 @@ router.get("/:userId/:language/:difficulty", async (req, res) => {
 });
 
 
-router.post("/advance", async (req, res) => {
-  const { userId, language, difficulty, order } = req.body;
+router.post("/advance", auth ,async (req, res) => {
+  const userId = req.user.id;
+  const {  language, difficulty, order } = req.body;
 
   let progress = await UserProgress.findOne({ userId, language, difficulty });
 

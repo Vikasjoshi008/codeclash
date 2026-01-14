@@ -13,10 +13,8 @@ export default function Question() {
   const [isSolved, setIsSolved] = useState(false);
   const [hasRunSuccessfully, setHasRunSuccessfully] = useState(false);
 
-
   const [code, setCode] = useState("");
   const navigate=useNavigate();
-  const userId= "6926ffccc0bebfe17f798806";
 
   useEffect(() => {
   setOutput(null);
@@ -33,7 +31,12 @@ export default function Question() {
   }, [order]);
 
   useEffect(() => {
-  fetch(`http://localhost:5000/api/progress/${userId}/javascript/easy`)
+  const token=localStorage.getItem("token");
+  fetch(`http://localhost:5000/api/progress/javascript/easy`, {
+    headers : {
+      Authorization: `Bearer.${token}`
+    }
+  })
     .then(res => res.json())
     .then(p => {
       setIsSolved(Number(order) < p.solvedOrders);
