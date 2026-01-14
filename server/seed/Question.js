@@ -1,6 +1,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const Problem = require("../models/Problem");
+const userProgress = require("../models/UserProgress");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 mongoose.connect(process.env.MONGO_URI);
@@ -126,7 +127,7 @@ async function seed() {
 
   const questions = await generateQuestions();
 
-  // await Problem.deleteMany({ language: LANGUAGE, difficulty: DIFFICULTY });
+  await Problem.deleteMany({ language: LANGUAGE, difficulty: DIFFICULTY });
   await Problem.deleteMany({ language: LANGUAGE, difficulty: DIFFICULTY });
 
   await Problem.insertMany(

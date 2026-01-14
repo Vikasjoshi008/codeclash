@@ -77,6 +77,7 @@ const handleRun = async() => {
   });
   navigate(`/practice/easy/${Number(order) + 1}`);
 }
+
 if (!question) {
   return (
     <div className="min-h-screen flex items-center justify-center text-white">
