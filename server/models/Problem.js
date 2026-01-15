@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const exampleSchema = new mongoose.Schema({
+  input: String,
+  output: String,
+  explanation: String
+});
+
 const testCaseSchema = new mongoose.Schema({
   input: mongoose.Schema.Types.Mixed,
   output: mongoose.Schema.Types.Mixed,
@@ -7,19 +13,22 @@ const testCaseSchema = new mongoose.Schema({
 });
 
 const problemSchema = new mongoose.Schema({
+  // Meta
   title: String,
+  difficulty: {
+    type: String,
+    enum: ["easy", "medium", "hard"]
+  },
+  topics: [String],
+  companies: [String],
+  isPremium: { type: Boolean, default: false },
+
+  // Content
   description: String,
-  inputDescription: String,
-  outputDescription: String,
-  constraints: String,
+  examples: [exampleSchema],
+  constraints: [String],
 
-  examples: [
-    {
-      input: String,
-      output: String
-    }
-  ],
-
+  // Code
   starterCode: {
     javascript: String,
     python: String,
@@ -27,29 +36,11 @@ const problemSchema = new mongoose.Schema({
     cpp: String
   },
 
+  // Judge
   testCases: [testCaseSchema],
 
-  language: {
-    type: String,
-    enum: [
-      "javascript", 
-      "python", 
-      "java", 
-      "cpp",
-      "c",
-      "csharp",
-      "ruby",
-      "php",
-      "typescript",
-    ],
-    required: true
-  },
-
-  difficulty: {
-    type: String,
-    enum: ["easy", "medium", "hard"]
-  },
-
+  // Practice system
+  language: String,
   order: Number
 });
 
