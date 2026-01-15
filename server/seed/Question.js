@@ -128,7 +128,6 @@ async function seed() {
   const questions = await generateQuestions();
 
   await Problem.deleteMany({ language: LANGUAGE, difficulty: DIFFICULTY });
-  await Problem.deleteMany({ language: LANGUAGE, difficulty: DIFFICULTY });
 
   await Problem.insertMany(
     questions.map((q, index) =>
