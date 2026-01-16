@@ -128,7 +128,6 @@ function repairJSON(text) {
 
   // Remove trailing commas
   repaired = repaired.replace(/,\s*([}\]])/g, "$1");
-
   return repaired;
 }
 
