@@ -1,18 +1,25 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const Problem = require("../models/Problem");
-const userProgress = require("../models/UserProgress");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
+// ---------- SAFE FETCH FOR NODE ----------
+const fetch =
+  global.fetch ||
+  ((...args) =>
+    import("node-fetch").then(({ default: fetch }) => fetch(...args)));
+
+// ---------- DB ----------
 mongoose.connect(process.env.MONGO_URI);
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+// ---------- CONFIG ----------
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_URL =
+  "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent";
 
 const LANGUAGE = "javascript";
 const DIFFICULTY = "easy";
 
-async function generateQuestions() {
+// ---------- PROMPT ----------
 const prompt = `
 Generate EXACTLY 60 UNIQUE LeetCode-style coding problems.
 
@@ -23,13 +30,11 @@ VERY IMPORTANT:
 These problems MUST look and feel EXACTLY like LeetCode problems.
 
 Each problem MUST:
-- Have a real-world or algorithmic description (NOT "write a function that...")
-- Include multiple paragraphs if needed
-- Include examples written like LeetCode
-- Include constraints section
+- Have a real algorithmic description (NOT "write a function that...")
 - Use realistic variable names (nums, arr, s, target, k, etc.)
-- Be solvable with standard DSA techniques
-- Avoid trivial tutorial-style wording
+- Include clear examples
+- Include constraints
+- Be solvable using standard DSA techniques
 
 STRICT JSON RULES:
 - Output MUST be valid JSON parsable by JSON.parse()
@@ -45,10 +50,10 @@ Each object MUST have this EXACT structure:
 
 {
   "title": "Two Sum",
-  "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order.",
-  "inputDescription": "An array of integers nums and an integer target.",
-  "outputDescription": "An array containing the indices of the two numbers.",
-  "constraints": "2 <= nums.length <= 10^4, -10^9 <= nums[i] <= 10^9, -10^9 <= target <= 10^9",
+  "description": "Problem description here",
+  "inputDescription": "Input description here",
+  "outputDescription": "Output description here",
+  "constraints": "Constraints here",
   "examples": [
     {
       "input": "nums = [2,7,11,15], target = 9",
@@ -56,7 +61,7 @@ Each object MUST have this EXACT structure:
     }
   ],
   "starterCode": {
-    "javascript": "function solve(nums, target) { }",
+    "javascript": "function solve(...) { }",
     "python": "",
     "java": "",
     "cpp": "",
@@ -82,74 +87,106 @@ Each object MUST have this EXACT structure:
 }
 
 ADDITIONAL RULES:
-- Each question MUST be different from the others
-- Avoid repeating the same pattern too often
-- Mix arrays, strings, objects, math, two pointers, hashing, recursion, etc.
+- Each question MUST be different
+- Avoid repeating patterns
+- Mix arrays, strings, math, hashing, two pointers, etc.
 - DO NOT generate more than 60 items
 `;
 
+// ---------- HELPERS ----------
+function extractJSON(text) {
+  const start = text.indexOf("[");
+  const end = text.lastIndexOf("]");
 
-
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
-
-    function safeParseJSON(text) {
-    // Remove JavaScript-only tokens
-    const cleaned = text
-      .replace(/\bundefined\b/g, "null")
-      .replace(/\bNaN\b/g, "null")
-      .replace(/\bInfinity\b/g, "null");
-
-    return JSON.parse(cleaned);
+  if (start === -1 || end === -1) {
+    throw new Error("❌ No JSON array found in Gemini response");
   }
 
-  const parsed = safeParseJSON(text); 
-  const questions= parsed.slice(0, 60);
+  const raw = text.slice(start, end + 1);
+  const repaired = repairJSON(raw);
 
-  return questions;
+  try {
+    return JSON.parse(repaired);
+  } catch (err) {
+    console.error("❌ JSON PARSE FAILED");
+    console.error("RAW RESPONSE:", raw.slice(0, 1000));
+    throw err;
+  }
 }
 
-function validateQuestion(q, index) {
-  if (!Array.isArray(q.testCases)) {
-    throw new Error(`Question ${index + 1}: testCases must be array`);
-  }
+function repairJSON(text) {
+  let repaired = text;
 
-  q.testCases.forEach((tc, i) => {
-    if (tc.input === undefined) {
-      throw new Error(`Question ${index + 1}, testCase ${i + 1}: input is undefined`);
-    }
-  });
+  // Fix unquoted object keys: title: → "title":
+  repaired = repaired.replace(
+    /([{,]\s*)([a-zA-Z0-9_]+)\s*:/g,
+    '$1"$2":'
+  );
 
-  return q;
+  // Replace single quotes with double quotes
+  repaired = repaired.replace(/'/g, '"');
+
+  // Remove trailing commas
+  repaired = repaired.replace(/,\s*([}\]])/g, "$1");
+
+  return repaired;
 }
 
 function normalizeExamples(examples) {
   if (!Array.isArray(examples)) return [];
   return examples.map(ex => ({
-    input: JSON.stringify(ex.input),
-    output: JSON.stringify(ex.output)
+    input: String(ex.input),
+    output: String(ex.output)
   }));
 }
 
 function normalizeTestCases(testCases) {
-  return testCases.map(tc => {
-    let input = tc.input;
+  if (!Array.isArray(testCases)) return [];
+  return testCases.map(tc => ({
+    input: tc.input,
+    output: tc.output,
+    hidden: Boolean(tc.hidden)
+  }));
+}
 
-    if (typeof input === "string") {
-      const trimmed = input.trim();
-
-      // convert ONLY if space-separated numbers
-      if (/^-?\d+(\s+-?\d+)+$/.test(trimmed)) {
-        input = trimmed.split(/\s+/).map(Number);
-      }
-    }
-
-    return { ...tc, input };
-  });
+function validateQuestion(q, index) {
+  if (!q.title || !q.description) {
+    throw new Error(`Question ${index + 1}: missing title or description`);
+  }
+  if (!Array.isArray(q.testCases) || q.testCases.length === 0) {
+    throw new Error(`Question ${index + 1}: testCases missing`);
+  }
+  return q;
 }
 
 
+// ---------- GEMINI CALL ----------
+async function generateQuestions() {
+  const res = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }]
+    })
+  });
 
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`❌ Gemini API error: ${err}`);
+  }
+
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!text) {
+    throw new Error("❌ Gemini returned empty response");
+  }
+
+  const parsed = extractJSON(text);
+  return parsed.slice(0, 60); // HARD LIMIT
+}
+
+// ---------- SEED ----------
 async function seed() {
   console.log("⏳ Generating questions using Gemini...");
 
@@ -159,18 +196,19 @@ async function seed() {
 
   await Problem.insertMany(
     questions.map((q, index) =>
-      validateQuestion({
-      ...q,
-      examples: normalizeExamples(q.examples),
-      testCases: normalizeTestCases(q.testCases),
-      language: LANGUAGE,
-      difficulty: DIFFICULTY,
-      order: index + 1
-    },
-    index
-  )
-)
-);
+      validateQuestion(
+        {
+          ...q,
+          examples: normalizeExamples(q.examples),
+          testCases: normalizeTestCases(q.testCases),
+          language: LANGUAGE,
+          difficulty: DIFFICULTY,
+          order: index + 1
+        },
+        index
+      )
+    )
+  );
 
   console.log(`✅ Seeded 60 ${LANGUAGE} ${DIFFICULTY} questions`);
   process.exit();
