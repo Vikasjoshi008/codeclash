@@ -14,36 +14,49 @@ const DIFFICULTY = "easy";
 
 async function generateQuestions() {
 const prompt = `
-Generate EXACTLY 60 UNIQUE coding questions only.
+Generate EXACTLY 60 UNIQUE LeetCode-style coding problems.
 
 Language: ${LANGUAGE}
 Difficulty: ${DIFFICULTY}
 
-IMPORTANT JSON RULES (STRICT):
+VERY IMPORTANT:
+These problems MUST look and feel EXACTLY like LeetCode problems.
+
+Each problem MUST:
+- Have a real-world or algorithmic description (NOT "write a function that...")
+- Include multiple paragraphs if needed
+- Include examples written like LeetCode
+- Include constraints section
+- Use realistic variable names (nums, arr, s, target, k, etc.)
+- Be solvable with standard DSA techniques
+- Avoid trivial tutorial-style wording
+
+STRICT JSON RULES:
 - Output MUST be valid JSON parsable by JSON.parse()
-- DO NOT use undefined, NaN, Infinity
-- Use null instead of undefined
-- Use only: string, number, boolean, null, array, object
-- testCases.input MUST be valid JSON
-- NEVER include JavaScript-only values
+- NO markdown
+- NO comments
+- NO extra text
+- NO undefined / NaN / Infinity
+- Use only string, number, boolean, null, array, object
 
-Return STRICT JSON ARRAY ONLY.
-NO text outside JSON.
-NO markdown.
+Return a STRICT JSON ARRAY ONLY.
 
-Each object must have this EXACT shape:
+Each object MUST have this EXACT structure:
 
 {
-  "title": "",
-  "description": "",
-  "inputDescription": "",
-  "outputDescription": "",
-  "constraints": "",
+  "title": "Two Sum",
+  "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order.",
+  "inputDescription": "An array of integers nums and an integer target.",
+  "outputDescription": "An array containing the indices of the two numbers.",
+  "constraints": "2 <= nums.length <= 10^4, -10^9 <= nums[i] <= 10^9, -10^9 <= target <= 10^9",
   "examples": [
-    { "input": "", "output": "" }
+    {
+      "input": "nums = [2,7,11,15], target = 9",
+      "output": "[0,1]"
+    }
   ],
   "starterCode": {
-    "javascript": "function solve(...) { }",
+    "javascript": "function solve(nums, target) { }",
     "python": "",
     "java": "",
     "cpp": "",
@@ -55,11 +68,26 @@ Each object must have this EXACT shape:
     "typescript": ""
   },
   "testCases": [
-    { "input": [1,2,3,4,5], "output": 15, "hidden": false },
-    { "input": [10,-5,3], "output": 8, "hidden": true }
+    {
+      "input": { "nums": [2,7,11,15], "target": 9 },
+      "output": [0,1],
+      "hidden": false
+    },
+    {
+      "input": { "nums": [3,2,4], "target": 6 },
+      "output": [1,2],
+      "hidden": true
+    }
   ]
 }
+
+ADDITIONAL RULES:
+- Each question MUST be different from the others
+- Avoid repeating the same pattern too often
+- Mix arrays, strings, objects, math, two pointers, hashing, recursion, etc.
+- DO NOT generate more than 60 items
 `;
+
 
 
   const result = await model.generateContent(prompt);
