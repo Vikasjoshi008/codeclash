@@ -59,7 +59,6 @@ const handleRun = async() => {
     setIsSolved(true);
   }
 }
-
   const markAsDone = async() => {
     const token=localStorage.getItem("token");
   await fetch("http://localhost:5000/api/progress/advance", {
