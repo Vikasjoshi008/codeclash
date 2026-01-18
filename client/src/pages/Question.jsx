@@ -44,7 +44,6 @@ export default function Question() {
 }, [order]);
 
 const handleRun = async() => {
-  console.log("button clicked");
   setOutput("");
   setError("");
 
