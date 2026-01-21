@@ -98,13 +98,7 @@ const auth = require("../middleware/auth");
 
 const router = express.Router();
 
-/**
- * GET current progress for logged-in user
- * Used for:
- * - locking/unlocking questions
- * - showing "already solved" banner
- */
-router.get("/:language/:difficulty", auth, async (req, res) => {
+router.get("/:userId/:language/:difficulty", auth, async (req, res) => {
   try {
     const userId = req.user.id;
     const { language, difficulty } = req.params;

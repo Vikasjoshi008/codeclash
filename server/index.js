@@ -4,7 +4,6 @@ const express=require("express");
 const cors=require('cors');
 const connectDB= require("./config/db.js");
 const authRoutes=require("./routes/auth/auth.js");
-const aiRoutes=require("./routes/practice/practiceOnline.js");
 const questionsRoutes=require("./routes/questions.js");
 const progressRoutes=require("./routes/progress.js");
 const executeRoutes=require("./routes/execute.js");
@@ -18,7 +17,6 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
-app.use("/api/ai", aiRoutes);
 app.use("/api/questions", questionsRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/execute", executeRoutes);

@@ -6,26 +6,39 @@ export default function Practice() {
   const [questions, setQuestions] = useState([]);
   const [language, setLanguage] = useState("javascript");
   const [difficulty, setDifficulty] = useState("easy");
-  const [currentOrder, setCurrentOrder]=useState(1);
-  const userId= "6926ffccc0bebfe17f798806";
+  const [currentOrder, setCurrentOrder] = useState(1);
 
+  const userId = "6926ffccc0bebfe17f798806"; // later from auth
   const navigate = useNavigate();
 
   useEffect(() => {
-  async function load() {
-    const progressRes = await fetch(
-      `http://localhost:5000/api/progress?userId=${userId}&language=${language}&difficulty=${difficulty}`
-    );
-    const progress = await progressRes.json();
-    setCurrentOrder(progress.currentOrder);
+    async function load() {
+      try {
+        const token = localStorage.getItem("token");
 
-    const qs = await getQuestions(language, difficulty);
-    setQuestions(qs);
-  }
+        // ✅ Correct progress API
+        const progressRes = await fetch(
+          `http://localhost:5000/api/progress/${userId}/${language}/${difficulty}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
 
-  load();
-}, [language, difficulty]);
+        const progress = await progressRes.json();
+        setCurrentOrder(progress.currentOrder || 1);
 
+        // ✅ Load questions from DB (CSV seeded)
+        const qs = await getQuestions(language, difficulty);
+        setQuestions(qs);
+      } catch (err) {
+        console.error("Failed to load practice data", err);
+      }
+    }
+
+    load();
+  }, [language, difficulty]);
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-8">
@@ -33,27 +46,27 @@ export default function Practice() {
 
       {/* Language Selector */}
       <select
-      value={language}
-      onChange={(e) => setLanguage(e.target.value)}
-    >
-      {[
-        "javascript",
-        "python",
-        "java",
-        "cpp",
-        "c",
-        "csharp",
-        "go",
-        "ruby",
-        "php",
-        "typescript"
-      ].map(lang => (
-        <option key={lang} value={lang}>
-          {lang.toUpperCase()}
-        </option>
-      ))}
-    </select>
-
+        className="mb-6 bg-black/40 border border-white/20 px-4 py-2 rounded"
+        value={language}
+        onChange={(e) => setLanguage(e.target.value)}
+      >
+        {[
+          "javascript",
+          "python",
+          "java",
+          "cpp",
+          "c",
+          "csharp",
+          "go",
+          "ruby",
+          "php",
+          "typescript"
+        ].map((lang) => (
+          <option key={lang} value={lang}>
+            {lang.toUpperCase()}
+          </option>
+        ))}
+      </select>
 
       {/* Difficulty Selector */}
       <div className="flex gap-4 mb-6">
@@ -79,25 +92,34 @@ export default function Practice() {
         )}
 
         {questions.map((q) => {
-            const locked = q.order > currentOrder;
+          const isSolved = q.order < currentOrder;
+          const isCurrent = q.order === currentOrder;
+          const isLocked = q.order > currentOrder;
 
-            return (
-              <button
-                key={q._id}
-                disabled={locked}
-                onClick={() =>
-                  navigate(`/practice/${difficulty}/${q.order}`)
-                }
-                className={`block w-full text-left p-4 rounded transition
-                  ${locked
+          return (
+            <button
+              key={q._id}
+              disabled={isLocked}
+              onClick={() =>
+                navigate(`/practice/${difficulty}/${q.order}`)
+              }
+              className={`block w-full text-left p-4 rounded transition
+                ${
+                  isLocked
                     ? "bg-white/5 text-gray-500 cursor-not-allowed"
-                    : "bg-white/10 hover:bg-white/20"}
-                `}
-              >
-                {q.order}. {q.title} {locked && "🔒"}
-              </button>
-            );
-          })}
+                    : "bg-white/10 hover:bg-white/20"
+                }
+              `}
+            >
+              <span className="mr-2">
+                {isSolved && "✔"}
+                {isCurrent && "▶"}
+                {isLocked && "🔒"}
+              </span>
+              {q.order}. {q.title}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
