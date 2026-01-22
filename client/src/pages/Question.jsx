@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
@@ -32,7 +33,8 @@ export default function Question() {
 
   useEffect(() => {
   const token=localStorage.getItem("token");
-  fetch(`http://localhost:5000/api/progress/javascript/easy`, {
+  const userId = token ? jwtDecode(token).id : null;
+  fetch(`http://localhost:5000/api/progress?userId=${userId}&language=javascript&difficulty=easy`, {
     headers : {
       Authorization: `Bearer.${token}`
     }
@@ -87,10 +89,59 @@ if (!question) {
 return (
     <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
   {/* LEFT: Question */}
-  <div className="p-6">
-    <h2 className="text-xl font-bold">{question.title}</h2>
-    <p className="mt-3">{question.description}</p>
-  </div>
+ <div className="p-6 overflow-y-auto">
+  <h2 className="text-2xl font-bold mb-2">{question.title}</h2>
+
+  <span className="inline-block mb-4 px-3 py-1 text-sm rounded bg-green-700/30 text-green-300">
+    Easy
+  </span>
+
+  {/* Description */}
+ <pre className="whitespace-pre-wrap text-gray-200 leading-relaxed">
+    {question.description}
+  </pre>
+
+  {/* Examples */}
+  {question.examples?.length > 0 && (
+    <div className="mt-6">
+      <h3 className="text-lg font-semibold mb-3">Examples</h3>
+
+      {question.examples.map((ex, idx) => (
+        <div
+          key={idx}
+          className="mb-4 rounded-lg bg-black/40 p-4 border border-white/10"
+        >
+          <p className="font-semibold mb-1">
+            Example {idx + 1}:
+          </p>
+
+          <p>
+            <span className="font-semibold">Input:</span>{" "}
+            <code className="text-blue-300">
+              {ex.input}
+            </code>
+          </p>
+
+          <p>
+            <span className="font-semibold">Output:</span>{" "}
+            <code className="text-green-300">
+              {ex.output}
+            </code>
+          </p>
+
+          {ex.explanation && (
+            <p className="mt-1 text-gray-300">
+              <span className="font-semibold">Explanation:</span>{" "}
+              {ex.explanation}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+
+</div>
+
 
   {/* RIGHT: Editor + Controls */}
   <div className="p-4 flex flex-col">

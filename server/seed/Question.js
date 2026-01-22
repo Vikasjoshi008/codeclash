@@ -1,12 +1,12 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
-const Problem = require("../models/Problem");
+const problem = require("../models/Problem");
 const questions = require("./leetcode.json");
 
 mongoose.connect(process.env.MONGO_URI);
 
 const LANGUAGE = "javascript";
-const DIFFICULTY = "Easy";
+const DIFFICULTY = "easy";
 
 function normalizeExamples(exampleText) {
   if (!exampleText) return [];
@@ -28,8 +28,11 @@ function normalizeConstraints(constraintText) {
 
 async function seed() {
   console.log("⏳ Seeding questions from CSV dataset...");
+    console.log("deleting questions");
 
-  await Problem.deleteMany({ language: LANGUAGE, difficulty: DIFFICULTY });
+  await problem.deleteMany({ });
+
+  console.log("✅ Deleted existing questions");
 
   const formatted = questions
     .filter(q => q.difficulty?.toLowerCase() === "easy")
@@ -49,7 +52,7 @@ async function seed() {
       order: index + 1
     }));
 
-  await Problem.insertMany(formatted);
+  await problem.insertMany(formatted);
 
   console.log("✅ Seeded 60 JavaScript Easy questions from CSV");
   process.exit();
