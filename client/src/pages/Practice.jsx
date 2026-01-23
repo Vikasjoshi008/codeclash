@@ -8,12 +8,12 @@ export default function Practice() {
   const [difficulty, setDifficulty] = useState("easy");
   const [currentOrder, setCurrentOrder] = useState(1);
 
-  const userId = "6926ffccc0bebfe17f798806"; // later from auth
   const navigate = useNavigate();
 
   useEffect(() => {
     async function load() {
       try {
+        const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
 
         // ✅ Correct progress API
@@ -30,7 +30,7 @@ export default function Practice() {
         setCurrentOrder(progress.currentOrder || 1);
 
         // ✅ Load questions from DB (CSV seeded)
-        const qs = await getQuestions(language, difficulty);
+        const qs = await getQuestions(difficulty);
         setQuestions(qs);
       } catch (err) {
         console.error("Failed to load practice data", err);
@@ -50,22 +50,16 @@ export default function Practice() {
         value={language}
         onChange={(e) => setLanguage(e.target.value)}
       >
-        {[
-          "javascript",
-          "python",
-          "java",
-          "cpp",
-          "c",
-          "csharp",
-          "go",
-          "ruby",
-          "php",
-          "typescript"
-        ].map((lang) => (
-          <option key={lang} value={lang}>
-            {lang.toUpperCase()}
-          </option>
-        ))}
+        <option value="javascript">JavaScript</option>
+        <option value="python">Python</option>
+        <option value="java">Java</option>
+        <option value="cpp">C++</option>
+        <option value="c">C</option>
+        <option value="csharp">C#</option>
+        <option value="go">Go</option>
+        <option value="ruby">Ruby</option>
+        <option value="php">PHP</option>
+        <option value="typescript">TypeScript</option>
       </select>
 
       {/* Difficulty Selector */}

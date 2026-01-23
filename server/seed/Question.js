@@ -5,26 +5,18 @@ const questions = require("./leetcode.json");
 
 mongoose.connect(process.env.MONGO_URI);
 
-const LANGUAGE = "javascript";
-const DIFFICULTY = "easy";
-
-function normalizeExamples(exampleText) {
-  if (!exampleText) return [];
-  return [
-    {
-      input: exampleText,
-      output: ""
-    }
-  ];
-}
-
-function normalizeConstraints(constraintText) {
-  if (!constraintText) return [];
-  return constraintText
-    .split("\n")
-    .map(c => c.trim())
-    .filter(Boolean);
-}
+const LANGUAGES = [
+  "javascript",
+  "python",
+  "java",
+  "cpp",
+  "c",
+  "csharp",
+  "go",
+  "ruby",
+  "php",
+  "typescript"
+];
 
 function extractFirstTestCase(description) {
   if (!description) return null;
@@ -35,47 +27,66 @@ function extractFirstTestCase(description) {
   if (!numsMatch || !targetMatch) return null;
 
   return {
-    input: [
-      numsMatch[1].split(",").map(n => Number(n.trim())),
-      Number(targetMatch[1])
-    ],
+    input: {
+      nums: numsMatch[1].split(",").map(n => Number(n.trim())),
+      target: Number(targetMatch[1])
+    },
     output: null,
     hidden: false
   };
 }
 
 async function seed() {
-  console.log("⏳ Seeding questions from LeetCode dataset...");
+  console.log("⏳ Seeding LeetCode questions...");
 
-  await Problem.deleteMany({});
-  console.log("✅ Deleted existing questions");
+  for (const difficulty of ["easy", "medium", "hard"]) {
+    const filtered = questions
+      .filter(q => q.difficulty?.toLowerCase() === difficulty)
+      .slice(0, 60);
 
-  const formatted = questions
-    .filter(q => q.difficulty?.toLowerCase() === "easy")
-    .slice(0, 60)
-    .map((q, index) => {
-      const testCase = extractFirstTestCase(q.description || q.Question);
+    const formatted = filtered.map((q, index) => {
+      const testCase = extractFirstTestCase(q.description);
 
       return {
-        title: q.title || q.Title,
-        description: q.description || q.Question || "",
-        difficulty: "easy",
-        topics: q.topics ? q.topics.split(",") : [],
-        examples: normalizeExamples(q.examples || q.Example),
-        constraints: normalizeConstraints(q.constraints || q.Constraints),
+        title: q.title,
+        description: q.description,
+        difficulty,
+        topics: q.related_topics?.split(",") || [],
+        companies: q.companies?.split(",") || [],
+        constraints: q.description
+          ?.split("Constraints:")[1]
+          ?.split("\n")
+          .map(s => s.trim())
+          .filter(Boolean) || [],
+
+        examples: [],
+
         starterCode: {
-          javascript: "function solve(nums, target) {\n  \n}"
+          javascript: "function solve(nums, target) {\n\n}",
+          python: "def solve(nums, target):\n    pass",
+          java: "class Solution { public int[] solve(int[] nums, int target) { return null; } }",
+          cpp: "#include <vector>\nusing namespace std;",
+          c: "#include <stdio.h>",
+          csharp: "class Solution { }",
+          go: "package main",
+          ruby: "def solve(nums, target)\nend",
+          php: "<?php function solve($nums, $target) {} ?>",
+          typescript: "function solve(nums: number[], target: number): number[] {}"
         },
+
         testCases: testCase ? [testCase] : [],
-        language: LANGUAGE,
-        order: index + 1,
-        hasJudge: q.testCases && q.testCases.length > 0
+        hasJudge: Boolean(testCase),
+
+        order: index + 1
       };
     });
 
-  await Problem.insertMany(formatted);
+    await Problem.deleteMany({ difficulty });
+    await Problem.insertMany(formatted);
 
-  console.log("✅ Seeded 60 JavaScript Easy questions with test cases");
+    console.log(`✅ Seeded ${difficulty} questions`);
+  }
+
   process.exit();
 }
 

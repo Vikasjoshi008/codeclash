@@ -9,51 +9,41 @@ const exampleSchema = new mongoose.Schema({
 const testCaseSchema = new mongoose.Schema({
   input: mongoose.Schema.Types.Mixed,
   output: mongoose.Schema.Types.Mixed,
-  hidden: { type: Boolean, default: false }
+  hidden: Boolean
+});
+
+const starterCodeSchema = new mongoose.Schema({
+  javascript: String,
+  python: String,
+  java: String,
+  cpp: String,
+  c: String,
+  csharp: String,
+  go: String,
+  ruby: String,
+  php: String,
+  typescript: String
 });
 
 const problemSchema = new mongoose.Schema({
-  // Meta
   title: String,
+  description: String,
   difficulty: {
     type: String,
     enum: ["easy", "medium", "hard"]
   },
   topics: [String],
   companies: [String],
-  isPremium: { type: Boolean, default: false },
 
-  // Content
-  description: String,
   examples: [exampleSchema],
   constraints: [String],
 
-  // Code
-  starterCode: {
-    javascript: "function solve(...) {}",
-    python: "def solve(...):\n    pass",
-    java: "class Solution { public static void main(...) {} }",
-    cpp: "#include <bits/stdc++.h>\nint main() {}",
-    c: "#include <stdio.h>\nint main() {}",
-    csharp: "using System;\nclass Program { static void Main() {} }",
-    go: "package main\nfunc main() {}",
-    ruby: "def solve()\nend",
-    php: "<?php\nfunction solve() {}\n?>",
-    typescript: "function solve(...) {}"
-  },
+  starterCode: starterCodeSchema,
 
-
-  // Judge
   testCases: [testCaseSchema],
+  hasJudge: Boolean,
 
-  // Practice system
-  language: String,
-  order: Number,
-  hasJudge: {
-    type: Boolean,
-    default: false
-}
-
+  order: Number
 });
 
 module.exports = mongoose.model("Problem", problemSchema);
