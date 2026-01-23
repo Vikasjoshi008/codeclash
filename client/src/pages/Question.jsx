@@ -50,6 +50,10 @@ const handleRun = async() => {
 
   const res = await runCode(code, question._id, "javascript");
   console.log("API RESPONSE:", res);
+  if(res.error) {
+    alert(`Error: ${res.error}`);
+  }
+
   if (res.stderr) {
     setError(res.stderr);
     setHasRunSuccessfully(false);
@@ -82,11 +86,17 @@ if (!question) {
     </div>
   );
 }
-
+  const canMarkSolved = question.hasJudge ? hasRunSuccessfully : true;
 return (
     <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
   {/* LEFT: Question */}
  <div className="p-6 overflow-y-auto">
+    {!question.hasJudge && (
+    <span className="px-3 py-1 rounded text-sm bg-yellow-700/30 text-yellow-300">
+      Practice Only
+    </span>
+  )}
+
   <h2 className="text-2xl font-bold mb-2">{question.title}</h2>
 
   <span className="inline-block mb-4 px-3 py-1 text-sm rounded bg-green-700/30 text-green-300">
@@ -151,33 +161,45 @@ return (
     />
 
     <div className="flex gap-4 mt-4">
-      <button
-        className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
-        onClick={handleRun}
-      >
-        Run Code
-      </button>
+  {/* Run Code */}
+  <button
+    onClick={handleRun}
+    disabled={!question.hasJudge}
+    className={`px-4 py-2 rounded ${
+      question.hasJudge
+        ? "bg-indigo-600 hover:bg-indigo-700"
+        : "bg-gray-700 cursor-not-allowed"
+    }`}
+    title={
+      question.hasJudge
+        ? "Run code"
+        : "Execution not available for this question"
+    }
+  >
+    Run Code
+  </button>
 
-      <button
-        className={`px-4 py-2 rounded ${
-          hasRunSuccessfully && !isSolved
-            ? "bg-green-600 hover:bg-green-700"
-            : "bg-gray-600 cursor-not-allowed"
-        }`}
-        disabled={!hasRunSuccessfully || isSolved}
-        onClick={markAsDone}
-        title={
-          !hasRunSuccessfully
-            ? "Solve this question to mark as done"
-            : isSolved
-            ? "Already solved"
-            : "Mark as solved"
-        }
-      >
-        Mark as Solved
-      </button>
+  {/* Mark as Solved */}
+  <button
+    onClick={markAsDone}
+    disabled={!canMarkSolved || isSolved}
+    className={`px-4 py-2 rounded ${
+      canMarkSolved && !isSolved
+        ? "bg-green-600 hover:bg-green-700"
+        : "bg-gray-600 cursor-not-allowed"
+    }`}
+    title={
+      isSolved
+        ? "Already solved"
+        : !canMarkSolved
+        ? "Solve this question to mark as done"
+        : "Mark as solved"
+    }
+  >
+    Mark as Solved
+  </button>
+</div>
 
-    </div>
 
     {output && (
       <pre className="mt-4 bg-black/70 p-4 rounded text-green-400">

@@ -41,7 +41,12 @@ const problemSchema = new mongoose.Schema({
 
   // Practice system
   language: String,
-  order: Number
+  order: Number,
+  hasJudge: {
+  type: Boolean,
+  default: false
+}
+
 });
 
 module.exports = mongoose.model("Problem", problemSchema);

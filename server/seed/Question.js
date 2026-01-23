@@ -68,7 +68,8 @@ async function seed() {
         },
         testCases: testCase ? [testCase] : [],
         language: LANGUAGE,
-        order: index + 1
+        order: index + 1,
+        hasJudge: q.testCases && q.testCases.length > 0
       };
     });
 

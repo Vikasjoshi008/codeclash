@@ -21,6 +21,13 @@ router.post("/", async (req, res) => {
     });
   }
 
+  if (!question.hasJudge) {
+    return res.status(400).json({
+      error: "Execution not available for this question (Practice Mode)"
+    });
+  }
+
+
   const testCase = question.testCases[0];
 
 
