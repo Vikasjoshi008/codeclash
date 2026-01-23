@@ -18,10 +18,9 @@ export default function Question() {
   const navigate=useNavigate();
 
   useEffect(() => {
-  setOutput(null);
-  setError(null);
-  setIsSolved(false);
-  setHasRunSuccessfully(false);
+    setOutput(null);
+    setError(null);
+    setHasRunSuccessfully(false);
 }, [order]);
 
   useEffect(() => {
@@ -41,13 +40,13 @@ export default function Question() {
   })
     .then(res => res.json())
     .then(p => {
-      setIsSolved(Number(order) < p.solvedOrders);
+      setIsSolved(p.solvedOrders.includes(Number(order)));
     });
 }, [order]);
 
 const handleRun = async() => {
-  setOutput("");
-  setError("");
+  setOutput(null);
+  setError(null);
 
   const res = await runCode(code, question._id, "javascript");
   console.log("API RESPONSE:", res);
@@ -57,7 +56,6 @@ const handleRun = async() => {
   } else {
     setOutput(res.stdout);
     setHasRunSuccessfully(true);
-    setIsSolved(true);
   }
 }
   const markAsDone = async() => {
@@ -69,7 +67,6 @@ const handleRun = async() => {
       "Content-Type": "application/json" 
     },
     body: JSON.stringify({
-      userId: userId,
       language: "javascript",
       difficulty: "easy",
       order: Number(order)

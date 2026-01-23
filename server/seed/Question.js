@@ -1,6 +1,6 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
-const problem = require("../models/Problem");
+const Problem = require("../models/Problem");
 const questions = require("./leetcode.json");
 
 mongoose.connect(process.env.MONGO_URI);
@@ -26,35 +26,55 @@ function normalizeConstraints(constraintText) {
     .filter(Boolean);
 }
 
+function extractFirstTestCase(description) {
+  if (!description) return null;
+
+  const numsMatch = description.match(/nums\s*=\s*\[([^\]]+)\]/);
+  const targetMatch = description.match(/target\s*=\s*(-?\d+)/);
+
+  if (!numsMatch || !targetMatch) return null;
+
+  return {
+    input: [
+      numsMatch[1].split(",").map(n => Number(n.trim())),
+      Number(targetMatch[1])
+    ],
+    output: null,
+    hidden: false
+  };
+}
+
 async function seed() {
-  console.log("⏳ Seeding questions from CSV dataset...");
-    console.log("deleting questions");
+  console.log("⏳ Seeding questions from LeetCode dataset...");
 
-  await problem.deleteMany({ });
-
+  await Problem.deleteMany({});
   console.log("✅ Deleted existing questions");
 
   const formatted = questions
     .filter(q => q.difficulty?.toLowerCase() === "easy")
     .slice(0, 60)
-    .map((q, index) => ({
-      title: q.title || q.Title,
-      description: q.description || q.Question || "",
-      difficulty: "easy",
-      topics: q.topics ? q.topics.split(",") : [],
-      examples: normalizeExamples(q.examples || q.Example),
-      constraints: normalizeConstraints(q.constraints || q.Constraints),
-      starterCode: {
-        javascript: "function solve(...) {\n  \n}"
-      },
-      testCases: [],
-      language: LANGUAGE,
-      order: index + 1
-    }));
+    .map((q, index) => {
+      const testCase = extractFirstTestCase(q.description || q.Question);
 
-  await problem.insertMany(formatted);
+      return {
+        title: q.title || q.Title,
+        description: q.description || q.Question || "",
+        difficulty: "easy",
+        topics: q.topics ? q.topics.split(",") : [],
+        examples: normalizeExamples(q.examples || q.Example),
+        constraints: normalizeConstraints(q.constraints || q.Constraints),
+        starterCode: {
+          javascript: "function solve(nums, target) {\n  \n}"
+        },
+        testCases: testCase ? [testCase] : [],
+        language: LANGUAGE,
+        order: index + 1
+      };
+    });
 
-  console.log("✅ Seeded 60 JavaScript Easy questions from CSV");
+  await Problem.insertMany(formatted);
+
+  console.log("✅ Seeded 60 JavaScript Easy questions with test cases");
   process.exit();
 }
 

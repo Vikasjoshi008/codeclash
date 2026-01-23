@@ -177,4 +177,38 @@ router.post("/advance", auth, async (req, res) => {
   }
 });
 
+// GET user progress
+router.get("/", async (req, res) => {
+  try {
+    const { userId, language, difficulty } = req.query;
+
+    if (!userId || !language || !difficulty) {
+      return res.status(400).json({ message: "Missing parameters" });
+    }
+
+    let progress = await UserProgress.findOne({
+      userId,
+      language,
+      difficulty
+    });
+
+    // If no progress yet, return default
+    if (!progress) {
+      return res.json({
+        userId,
+        language,
+        difficulty,
+        currentOrder: 1,
+        solvedOrders: []
+      });
+    }
+
+    res.json(progress);
+  } catch (err) {
+    console.error("Progress GET error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 module.exports = router;
