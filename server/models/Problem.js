@@ -30,11 +30,18 @@ const problemSchema = new mongoose.Schema({
 
   // Code
   starterCode: {
-    javascript: String,
-    python: String,
-    java: String,
-    cpp: String
+    javascript: "function solve(...) {}",
+    python: "def solve(...):\n    pass",
+    java: "class Solution { public static void main(...) {} }",
+    cpp: "#include <bits/stdc++.h>\nint main() {}",
+    c: "#include <stdio.h>\nint main() {}",
+    csharp: "using System;\nclass Program { static void Main() {} }",
+    go: "package main\nfunc main() {}",
+    ruby: "def solve()\nend",
+    php: "<?php\nfunction solve() {}\n?>",
+    typescript: "function solve(...) {}"
   },
+
 
   // Judge
   testCases: [testCaseSchema],
@@ -43,8 +50,8 @@ const problemSchema = new mongoose.Schema({
   language: String,
   order: Number,
   hasJudge: {
-  type: Boolean,
-  default: false
+    type: Boolean,
+    default: false
 }
 
 });
