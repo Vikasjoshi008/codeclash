@@ -16,6 +16,11 @@ export default function Practice() {
         const userId = localStorage.getItem("userId");
         const token = localStorage.getItem("token");
 
+        const qs = await getQuestions(
+          difficulty.toLowerCase(),
+          language.toLowerCase()
+        );
+
         // ✅ Correct progress API
         const progressRes = await fetch(
           `http://localhost:5000/api/progress/${userId}/${language}/${difficulty}`,
@@ -29,8 +34,6 @@ export default function Practice() {
         const progress = await progressRes.json();
         setCurrentOrder(progress.currentOrder || 1);
 
-        // ✅ Load questions from DB (CSV seeded)
-        const qs = await getQuestions(difficulty);
         setQuestions(qs);
       } catch (err) {
         console.error("Failed to load practice data", err);

@@ -1,8 +1,8 @@
 const token = localStorage.getItem("token");
 
-export async function getQuestions(difficulty) {
+export async function getQuestions(language, difficulty) {
   const res = await fetch(
-    `http://localhost:5000/api/questions?difficulty=${difficulty}`, {
+    `http://localhost:5000/api/questions?language=${language}&difficulty=${difficulty}`, {
       headers : {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"
@@ -12,9 +12,9 @@ export async function getQuestions(difficulty) {
   return res.json();
 }
 
-export async function getQuestionByOrder(difficulty, order) {
+export async function getQuestionByOrder(language, difficulty, order) {
   const res = await fetch(
-    `http://localhost:5000/api/questions/${order}?difficulty=${difficulty}`, {
+    `http://localhost:5000/api/questions/${order}?language=${language}&difficulty=${difficulty}`, {
      headers : {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"

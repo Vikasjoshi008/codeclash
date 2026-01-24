@@ -1,34 +1,55 @@
-const express = require('express');
-const Question = require('../models/Problem');
+const express = require("express");
+const Question = require("../models/Problem");
 
 const router = express.Router();
 
-// get questions list
+// ✅ GET QUESTIONS LIST
 router.get("/", async (req, res) => {
-  const { language, difficulty } = req.query;
+  try {
+    const { language, difficulty } = req.query;
 
-  const questions = await Question.find({ 
-    difficulty: difficulty.toLocaleLowerCase(),
-  }).sort({ order: 1 });
+    // ✅ safety check
+    if (!language || !difficulty) {
+      return res.status(400).json({ message: "Missing filters" });
+    }
 
-  res.json(questions);
+    const questions = await Question.find({
+      language: language.toLowerCase(),
+      difficulty: difficulty.toLowerCase(),
+    }).sort({ order: 1 });
+
+    res.json(questions);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
-// get single question by order
+// ✅ GET SINGLE QUESTION BY ORDER
 router.get("/:order", async (req, res) => {
-  const { order } = req.params;
-  const { difficulty } = req.query;
+  try {
+    const { order } = req.params;
+    const { language, difficulty } = req.query;
 
-  const question = await Question.findOne({
-    difficulty: difficulty.toLocaleLowerCase(),
-    order: Number(order)
-  });
+    if (!language || !difficulty) {
+      return res.status(400).json({ message: "Missing filters" });
+    }
 
-  if (!question) {
-    return res.status(404).json({ message: "Question not found" });
+    const question = await Question.findOne({
+      language: language.toLowerCase(),
+      difficulty: difficulty.toLowerCase(),
+      order: Number(order),
+    });
+
+    if (!question) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    res.json(question);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
-
-  res.json(question);
 });
 
 module.exports = router;

@@ -9,10 +9,8 @@ export default function Question() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const language = searchParams.get("lang") || "javascript";
+  const language = searchParams.get("language") || "javascript";
   const difficulty = searchParams.get("difficulty") || "easy";
-
-  const userId = "6926ffccc0bebfe17f798806"; // replace later with auth user
 
   const [question, setQuestion] = useState(null);
   const [code, setCode] = useState("");
@@ -22,7 +20,7 @@ export default function Question() {
   const [isSolved, setIsSolved] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  /* ---------------- FETCH QUESTION ---------------- */
+  /* FETCH QUESTION */
   useEffect(() => {
     setLoading(true);
     setOutput("");
@@ -34,11 +32,13 @@ export default function Question() {
         setQuestion(q);
         setCode(q?.starterCode?.[language] || "");
       })
+      .catch(() => setQuestion(null))
       .finally(() => setLoading(false));
   }, [order, language, difficulty]);
 
-  /* ---------------- CHECK SOLVED STATUS ---------------- */
+  /* CHECK SOLVED */
   useEffect(() => {
+    const userId = localStorage.getItem("userId");
     fetch(
       `http://localhost:5000/api/progress?userId=${userId}&language=${language}&difficulty=${difficulty}`
     )
@@ -53,7 +53,7 @@ export default function Question() {
   if (loading) return <div className="p-6 text-white">Loading...</div>;
   if (!question) return <div className="p-6 text-red-400">Question not found</div>;
 
-  /* ---------------- RUN CODE ---------------- */
+  /* RUN CODE */
   const handleRun = async () => {
     setOutput("");
     setError("");
@@ -61,19 +61,18 @@ export default function Question() {
 
     try {
       const res = await runCode(code, question._id, language);
-
       if (res.stderr) {
         setError(res.stderr);
       } else {
         setOutput(res.stdout || "No output");
         setRanSuccessfully(true);
       }
-    } catch (err) {
+    } catch {
       setError("Execution failed");
     }
   };
 
-  /* ---------------- MARK AS SOLVED ---------------- */
+  /* MARK SOLVED */
   const handleMarkSolved = async () => {
     if (!ranSuccessfully) return;
 
@@ -91,51 +90,34 @@ export default function Question() {
     navigate(`/practice/${difficulty}/${Number(order) + 1}?lang=${language}`);
   };
 
-  /* ---------------- RENDER HELPERS ---------------- */
-  function extractConstraints(description = "") {
-  const idx = description.indexOf("Constraints:");
-  if (idx === -1) return [];
-
-  return description
-    .slice(idx + "Constraints:".length)
-    .split("\n")
-    .map(line => line.trim())
-    .filter(Boolean);
-}
-
+  /* SPLIT DESCRIPTION */
+  const [desc, rest] = question.description.split("Constraints:");
 
   return (
     <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
 
-      {/* LEFT: PROBLEM */}
+      {/* LEFT */}
       <div className="p-6 overflow-y-auto">
         <h1 className="text-2xl font-bold mb-2">{question.title}</h1>
 
-        <span className="inline-block px-3 py-1 mb-4 rounded bg-green-700 text-sm">
+        <span className="inline-block mb-4 px-3 py-1 text-sm rounded bg-green-700">
           {difficulty.toUpperCase()}
         </span>
 
-        <div className="text-gray-200 leading-relaxed">
-          {extractConstraints(question.description).length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-2">Constraints</h3>
-              <ul className="list-disc ml-6 text-gray-300">
-                {extractConstraints(question.description).map((c, i) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
+        <pre className="whitespace-pre-wrap text-gray-200 leading-relaxed">
+          {desc}
+        </pre>
 
-        {/* CONSTRAINTS */}
-        {Array.isArray(question.constraints) && question.constraints.length > 0 && (
+        {rest && (
           <>
             <h3 className="mt-6 font-semibold">Constraints</h3>
             <ul className="list-disc ml-6 mt-2 text-gray-300">
-              {question.constraints.map((c, i) => (
-                <li key={i}>{c}</li>
-              ))}
+              {rest
+                .split("\n")
+                .filter(Boolean)
+                .map((c, i) => (
+                  <li key={i}>{c}</li>
+                ))}
             </ul>
           </>
         )}
@@ -147,7 +129,7 @@ export default function Question() {
         )}
       </div>
 
-      {/* RIGHT: EDITOR */}
+      {/* RIGHT */}
       <div className="p-4 flex flex-col">
         <Editor
           height="70vh"
@@ -168,11 +150,7 @@ export default function Question() {
           <button
             onClick={handleMarkSolved}
             disabled={!ranSuccessfully}
-            title={
-              ranSuccessfully
-                ? "Mark as solved"
-                : "Solve the question to mark as solved"
-            }
+            title={ranSuccessfully ? "Mark solved" : "Run code first"}
             className={`px-4 py-2 rounded ${
               ranSuccessfully
                 ? "bg-green-600 hover:bg-green-700"
