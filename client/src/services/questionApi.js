@@ -12,9 +12,9 @@ export async function getQuestions(difficulty) {
   return res.json();
 }
 
-export async function getQuestion(language, difficulty, order) {
+export async function getQuestionByOrder(difficulty, order) {
   const res = await fetch(
-    `http://localhost:5000/api/questions/${order}?language=${language}&difficulty=${difficulty}`, {
+    `http://localhost:5000/api/questions/${order}?difficulty=${difficulty}`, {
      headers : {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json"

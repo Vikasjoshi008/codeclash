@@ -7,9 +7,9 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   const { language, difficulty } = req.query;
 
-  const questions = await Question.find({ language, difficulty })
-    .sort({ order: 1 })
-    .select("_id title order");
+  const questions = await Question.find({ 
+    difficulty: difficulty.toLocaleLowerCase(),
+  }).sort({ order: 1 });
 
   res.json(questions);
 });
@@ -17,11 +17,10 @@ router.get("/", async (req, res) => {
 // get single question by order
 router.get("/:order", async (req, res) => {
   const { order } = req.params;
-  const { language, difficulty } = req.query;
+  const { difficulty } = req.query;
 
   const question = await Question.findOne({
-    language,
-    difficulty,
+    difficulty: difficulty.toLocaleLowerCase(),
     order: Number(order)
   });
 
