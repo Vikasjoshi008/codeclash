@@ -17,8 +17,8 @@ export default function Practice() {
         const token = localStorage.getItem("token");
 
         const qs = await getQuestions(
-          difficulty.toLowerCase(),
-          language.toLowerCase()
+          language.toLowerCase(),
+          difficulty.toLowerCase()
         );
 
         // ✅ Correct progress API

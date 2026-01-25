@@ -1,21 +1,23 @@
 const express = require("express");
-const Question = require("../models/Problem");
+const problem = require("../models/Problem");
 
 const router = express.Router();
 
 // ✅ GET QUESTIONS LIST
 router.get("/", async (req, res) => {
   try {
-    const { language, difficulty } = req.query;
+    const { difficulty } = req.query;
+    console.log("question query:", req.query);
 
     // ✅ safety check
-    if (!language || !difficulty) {
+    if (!difficulty) {
       return res.status(400).json({ message: "Missing filters" });
     }
 
-    const questions = await Question.find({
-      language: language.toLowerCase(),
-      difficulty: difficulty.toLowerCase(),
+    const questions = await problem.find({
+      // language: { $regex: `^${language}$`, $options: "i" },
+      // difficulty: { $regex: `^${difficulty}$`, $options: "i" },
+       difficulty: difficulty.toLowerCase(),
     }).sort({ order: 1 });
 
     res.json(questions);
@@ -29,14 +31,13 @@ router.get("/", async (req, res) => {
 router.get("/:order", async (req, res) => {
   try {
     const { order } = req.params;
-    const { language, difficulty } = req.query;
+    const { difficulty } = req.query;
 
-    if (!language || !difficulty) {
+    if (!difficulty) {
       return res.status(400).json({ message: "Missing filters" });
     }
 
-    const question = await Question.findOne({
-      language: language.toLowerCase(),
+    const question = await problem.findOne({
       difficulty: difficulty.toLowerCase(),
       order: Number(order),
     });
