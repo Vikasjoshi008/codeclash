@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { getQuestionByOrder } from "../services/questionApi";
+import api from "../services/api";
 import { runCode } from "../services/executionAPI";
 
 export default function Question() {
@@ -20,6 +21,7 @@ export default function Question() {
   const [isSolved, setIsSolved] = useState(false);
   const [loading, setLoading] = useState(true);
 
+
   /* FETCH QUESTION */
   useEffect(() => {
     setLoading(true);
@@ -30,22 +32,31 @@ export default function Question() {
     getQuestionByOrder(language, difficulty, order)
       .then(q => {
         setQuestion(q);
-        setCode(q?.starterCode?.[language] || "");
       })
       .catch(() => setQuestion(null))
       .finally(() => setLoading(false));
-  }, [order, language, difficulty]);
+  }, [order, difficulty]);
+
+  /* SET STARTER CODE */
+  useEffect(() => {
+  if (question?.starterCode?.[language]) {
+    setCode(question.starterCode[language]);
+  }
+}, [language, question]);
 
   /* CHECK SOLVED */
   useEffect(() => {
     const userId = localStorage.getItem("userId");
-    fetch(
-      `http://localhost:5000/api/progress?userId=${userId}&language=${language}&difficulty=${difficulty}`
-    )
+    if (!userId) return;
+      api.get("/progress", {
+        params: { userId, language, difficulty }
+      })
       .then(res => res.ok ? res.json() : null)
       .then(p => {
         if (p?.solvedOrders?.includes(Number(order))) {
           setIsSolved(true);
+        } else {
+          setIsSolved(false);
         }
       });
   }, [order, language, difficulty]);
@@ -76,18 +87,17 @@ export default function Question() {
   const handleMarkSolved = async () => {
     if (!ranSuccessfully) return;
 
-    await fetch("http://localhost:5000/api/progress/advance", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId,
-        language,
-        difficulty,
-        order: Number(order)
-      })
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+    
+    await api.post("/progress/advance", {
+      userId,
+      language,
+      difficulty,
+      order: Number(order)
     });
 
-    navigate(`/practice/${difficulty}/${Number(order) + 1}?lang=${language}`);
+    navigate(`/practice/${difficulty}/${Number(order) + 1}?language=${language}`);
   };
 
   /* SPLIT DESCRIPTION */
@@ -99,10 +109,6 @@ export default function Question() {
       {/* LEFT */}
       <div className="p-6 overflow-y-auto">
         <h1 className="text-2xl font-bold mb-2">{question.title}</h1>
-
-        <span className="inline-block mb-4 px-3 py-1 text-sm rounded bg-green-700">
-          {difficulty.toUpperCase()}
-        </span>
 
         <pre className="whitespace-pre-wrap text-gray-200 leading-relaxed">
           {desc}
@@ -132,7 +138,8 @@ export default function Question() {
       {/* RIGHT */}
       <div className="p-4 flex flex-col">
         <Editor
-          height="70vh"
+          key={language}
+          height="60vh"
           theme="vs-dark"
           language={language}
           value={code}

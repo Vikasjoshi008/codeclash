@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import jwtDecode from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-import { getQuestions } from "../services/questionApi";
+import api from "../services/api";
 
 export default function Practice() {
   const [questions, setQuestions] = useState([]);
@@ -11,37 +12,38 @@ export default function Practice() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function load() {
-      try {
-        const userId = localStorage.getItem("userId");
-        const token = localStorage.getItem("token");
+  async function load() {
+    try {
+      // ✅ ALWAYS load questions
+      const questionsRes = await api.get("/questions", {
+        params: {
+          difficulty: difficulty.toLowerCase()
+        }
+      });
 
-        const qs = await getQuestions(
-          language.toLowerCase(),
-          difficulty.toLowerCase()
+      setQuestions(questionsRes.data);
+
+      // ✅ Load progress ONLY if logged in
+      const token = localStorage.getItem("token");
+      const userId = token ? jwtDecode(token).id : null;
+      if (userId) {
+        const progressRes = await api.get(
+          `/progress/${userId}/${language}/${difficulty}`
         );
 
-        // ✅ Correct progress API
-        const progressRes = await fetch(
-          `http://localhost:5000/api/progress/${userId}/${language}/${difficulty}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-
-        const progress = await progressRes.json();
-        setCurrentOrder(progress.currentOrder || 1);
-
-        setQuestions(qs);
-      } catch (err) {
-        console.error("Failed to load practice data", err);
+        setCurrentOrder(progressRes.data.currentOrder || 1);
+      } else {
+        setCurrentOrder(1);
       }
-    }
 
-    load();
-  }, [language, difficulty]);
+    } catch (err) {
+      console.error("Failed to load practice data", err);
+    }
+  }
+
+  load();
+}, [language, difficulty]);
+
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-8">
@@ -98,7 +100,7 @@ export default function Practice() {
               key={q._id}
               disabled={isLocked}
               onClick={() =>
-                navigate(`/practice/${difficulty}/${q.order}`)
+                navigate(`/practice/${difficulty}/${q.order}?language=${language}`)
               }
               className={`block w-full text-left p-4 rounded transition
                 ${
