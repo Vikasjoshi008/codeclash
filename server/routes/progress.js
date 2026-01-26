@@ -5,7 +5,7 @@ const UserSolveHistory = require("../models/userHistory.js");
 
 const router = express.Router();
 
-router.get("/:userId/:language/:difficulty", auth, async (req, res) => {
+router.get("/:language/:difficulty", auth, async (req, res) => {
   try {
     const userId = req.user.id;
     const { language, difficulty } = req.params;
@@ -27,10 +27,7 @@ router.get("/:userId/:language/:difficulty", auth, async (req, res) => {
       });
     }
 
-    res.json({
-      currentOrder: progress.currentOrder,
-      solvedOrders: progress.solvedOrders
-    });
+    res.json( progress );
   } catch (err) {
     console.error("Progress fetch error:", err);
     res.status(500).json({ message: "Server error" });
@@ -38,53 +35,34 @@ router.get("/:userId/:language/:difficulty", auth, async (req, res) => {
 });
 
 
-router.post("/advance", async (req, res) => {
-  try {
-    const { userId, language, difficulty, order } = req.body;
+router.post("/advance", auth, async (req, res) => {
+  const userId = req.user.id;
+  const { language, difficulty, order, problemId } = req.body;
 
-    // 1️⃣ Find the problem
-    const question = await Problem.findOne({
-      difficulty,
-      order
-    });
+  const progress = await UserProgress.findOneAndUpdate(
+    { userId, language, difficulty },
+    {
+      $addToSet: { solvedOrders: order },
+      $set: { currentOrder: order + 1 }
+    },
+    { upsert: true, new: true }
+  );
 
-    if (!question) {
-      return res.status(404).json({ message: "Question not found" });
-    }
+  // SAVE HISTORY
+  await UserSolveHistory.findOneAndUpdate(
+    { userId, problemId, language },
+    { 
+      userId, 
+      problemId,
+      title: req.body.title,
+      language, 
+      difficulty, 
+      order 
+    },
+    { upsert: true }
+  );
 
-    // 2️⃣ Update progress (your existing logic)
-    await UserProgress.findOneAndUpdate(
-      { userId, language, difficulty },
-      {
-        $addToSet: { solvedOrders: order },
-        $set: { currentOrder: order + 1 }
-      },
-      { upsert: true }
-    );
-
-    // 3️⃣ SAVE SOLVE HISTORY ✅ (THIS IS WHERE IT GOES)
-    await UserSolveHistory.findOneAndUpdate(
-      {
-        userId,
-        problemId: question._id,
-        language
-      },
-      {
-        userId,
-        problemId: question._id,
-        title: question.title,
-        language,
-        difficulty,
-        order
-      },
-      { upsert: true, new: true }
-    );
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error" });
-  }
+  res.json(progress);
 });
 
 // GET user progress

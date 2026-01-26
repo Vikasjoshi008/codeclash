@@ -53,20 +53,17 @@ export default function Question() {
 
   /* CHECK SOLVED */
   useEffect(() => {
-  const userId = localStorage.getItem("userId");
-  if (!userId) return;
-
-  api.get("/progress", {
-    params: { userId, language, difficulty }
-  })
-  .then(res => {
-    if (res.data?.solvedOrders?.includes(Number(order))) {
-      setIsSolved(true);
-    } else {
-      setIsSolved(false);
-    }
-  });
+  api.get(`/progress/${language}/${difficulty}`)
+    .then(res => {
+      if (res.data.solvedOrders?.includes(Number(order))) {
+        setIsSolved(true);
+      } else {
+        setIsSolved(false);
+      }
+    })
+    .catch(() => setIsSolved(false));
 }, [order, language, difficulty]);
+
 
 
   if (loading) return <div className="p-6 text-white">Loading...</div>;
@@ -81,27 +78,27 @@ const handleRun = async () => {
   try {
     const response = await runCode(code, question._id, language);
 
-    const { stdout, stderr, code: exitCode } = response.data.run;
+    console.log("RUN RESPONSE:", response);
 
-    if (exitCode === 0) {
+    const { stdout, stderr } = response;
+
+    // ✅ SUCCESS = no stderr
+    if (!stderr || stderr.trim() === "") {
       setOutput(stdout || "");
       setRanSuccessfully(true);
 
       // ✅ SAVE PROGRESS
-      const userId = localStorage.getItem("userId");
-      if (userId) {
         await api.post("/progress/advance", {
-          userId,
           problemId: question._id,
+          title: question.title,
           language,
           difficulty,
           order: Number(order)
         });
-      }
-
     } else {
-      setError(stderr || "Execution failed");
+      setError(stderr);
     }
+
   } catch (err) {
     console.error("RUN ERROR:", err);
     setError("Execution failed");

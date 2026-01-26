@@ -28,7 +28,7 @@ export default function Practice() {
       const userId = token ? jwtDecode(token).id : null;
       if (userId) {
         const progressRes = await api.get(
-          `/progress/${userId}/${language}/${difficulty}`
+          `/progress/${language}/${difficulty}`
         );
 
         setCurrentOrder(progressRes.data.currentOrder || 1);

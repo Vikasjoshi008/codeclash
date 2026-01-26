@@ -7,10 +7,7 @@ export default function UserDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-
-    api.get(`/history/${userId}`)
+    api.get(`/history/`)
       .then(res => setHistory(res.data))
       .catch(err => console.error(err));
   }, []);
