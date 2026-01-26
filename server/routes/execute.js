@@ -32,17 +32,26 @@ router.post("/", async (req, res) => {
 
 
     // ✅ Wrap user code safely
-    const wrappedCode = `
+const wrappedCode = `
 ${code}
 
 try {
   const input = ${JSON.stringify(testCase.input)};
-  const result = solve(...input);
-  console.log(JSON.stringify(result));
+
+  // ✅ CALL solve CORRECTLY BASED ON INPUT SHAPE
+  if (Array.isArray(input)) {
+    solve(...input);
+  } else if (input && typeof input === "object") {
+    solve(input.nums, input.target);
+  } else {
+    throw new Error("Invalid test case input format");
+  }
+
 } catch (err) {
   console.error(err.message);
 }
 `;
+
 
     const pistonResult = await runCode({
       code: wrappedCode,
@@ -52,8 +61,8 @@ try {
     console.log("PISTON RESULT:", pistonResult);
 
     res.json({
-      stdout: pistonResult.run?.output || "",
-      stderr: pistonResult.run?.stderr || ""
+      stdout: pistonResult.run.stdout.trim(),
+      stderr: pistonResult.run.stderr
     });
 
   } catch (err) {

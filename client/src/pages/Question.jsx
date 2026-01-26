@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { getQuestionByOrder } from "../services/questionApi";
@@ -32,12 +33,10 @@ export default function Question() {
     setRanSuccessfully(false);
 
     getQuestionByOrder(language, difficulty, order)
-      .then(q => {
-        setQuestion(q);
-      })
+      .then(q => {setQuestion(q)})
       .catch(() => setQuestion(null))
       .finally(() => setLoading(false));
-  }, [order, difficulty]);
+  }, [language, order, difficulty]);
 
   /* RESET SOLVED BANNER */
   useEffect(() => {
@@ -74,40 +73,50 @@ export default function Question() {
   if (!question) return <div className="p-6 text-red-400">Question not found</div>;
 
   /* RUN CODE */
-  const handleRun = async () => {
-    setOutput("");
-    setError("");
-    setRanSuccessfully(false);
+const handleRun = async () => {
+  setOutput("");
+  setError("");
+  setRanSuccessfully(false);
 
-    try {
-      const res = await runCode(code, question._id, language);
-      if (res.stderr) {
-        setError(res.stderr);
-      } else {
-        setOutput(res.stdout || "No output");
-        setRanSuccessfully(true);
+  try {
+    const response = await runCode(code, question._id, language);
+
+    const { stdout, stderr, code: exitCode } = response.data.run;
+
+    if (exitCode === 0) {
+      setOutput(stdout || "");
+      setRanSuccessfully(true);
+
+      // ✅ SAVE PROGRESS
+      const userId = localStorage.getItem("userId");
+      if (userId) {
+        await api.post("/progress/advance", {
+          userId,
+          problemId: question._id,
+          language,
+          difficulty,
+          order: Number(order)
+        });
       }
-    } catch {
-      setError("Execution failed");
+
+    } else {
+      setError(stderr || "Execution failed");
     }
-  };
+  } catch (err) {
+    console.error("RUN ERROR:", err);
+    setError("Execution failed");
+  }
+};
 
-  /* MARK SOLVED */
-  const handleMarkSolved = async () => {
-    if (!ranSuccessfully) return;
 
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-    
-    await api.post("/progress/advance", {
-      userId,
-      language,
-      difficulty,
-      order: Number(order)
-    });
+  const handleNextQuestion = () => {
+  const nextOrder = Number(order) + 1;
 
-    navigate(`/practice/${difficulty}/${Number(order) + 1}?language=${language}`);
-  };
+  navigate(
+    `/practice/${difficulty}/${nextOrder}?language=${language}`
+  );
+};
+
 
   /* SPLIT DESCRIPTION */
   const [desc, rest] = question.description.split("Constraints:");
@@ -138,16 +147,16 @@ export default function Question() {
         )}
 
         {isSolved && showSolvedBanner && (
-        <div className="mt-6 p-3 rounded bg-green-900 text-green-300 flex justify-between items-center">
-          <span>✅ You already solved this question</span>
-          <button
-            onClick={() => setShowSolvedBanner(false)}
-            className="text-red-400 hover:text-red-300 font-bold"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+          <div className="mt-6 p-3 rounded bg-green-900 text-green-300 flex justify-between items-center">
+            <span>✅ You already solved this question</span>
+            <button
+              onClick={() => setShowSolvedBanner(false)}
+              className="text-red-400 hover:text-red-300 font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
       </div>
 
@@ -170,25 +179,14 @@ export default function Question() {
             Run Code
           </button>
 
+          {ranSuccessfully && (
           <button
-            onClick={handleMarkSolved}
-            disabled={!ranSuccessfully && !isSolved}
-            title={
-              isSolved
-                ? "Already solved"
-                : ranSuccessfully
-                ? "Mark solved"
-                : "Run code first"
-            }
-            className={`px-4 py-2 rounded ${
-              ranSuccessfully || isSolved
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-gray-600 cursor-not-allowed"
-            }`}
+            onClick={handleNextQuestion}
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
           >
-            Mark as Solved
+            Next Question →
           </button>
-
+          )}
         </div>
 
         {output && (
