@@ -6,14 +6,18 @@ import Home from "./home/Home";
 import Login from "./auth/login/login";
 import Signup from "./auth/signup/signUp";
 import PrivateRoute from "./components/PrivateRoute";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Landing";
 import Practice from "./pages/Practice";
 import OneVsOne from "./pages/OneVsOne";
 import Question from './pages/Question';
+import Navbar from './components/Navbar';
+import UserDashboard from './pages/UserDashboard';
 
 function App() {
   return (
+    <>
     <BrowserRouter>
+    <Navbar/>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
@@ -21,7 +25,7 @@ function App() {
         <Route path="/dashboard" 
               element={ 
                 <PrivateRoute>
-                  <Dashboard/>
+                  <UserDashboard/>
                 </PrivateRoute>} />
         <Route path="/battle/1v1"
               element={
@@ -45,6 +49,7 @@ function App() {
                   />
       </Routes>
     </BrowserRouter>
+    </>
   )
 }
 

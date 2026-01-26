@@ -141,7 +141,7 @@ const Login = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-white transition"
                 >
-                  <span className="text-xl">{showPassword ? "🙈" : "👁️"}</span>
+                  <span className="text-xl cursor-pointer ">{showPassword ? "🙈" : "👁️"}</span>
                 </button>
               </div>
             </motion.div>

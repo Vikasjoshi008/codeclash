@@ -1,17 +1,4 @@
-// import React from 'react';
-// import { Link } from 'react-router-dom';
 
-// function Home() {
-//     return ( 
-//         <div>
-//             <h1 className='text-white'>🔥 CodeClash</h1>
-//             <Link to="/login" className='text-white'>Login |</Link> 
-//             <Link to="/signup" className='text-white'> Signup</Link>
-//         </div>
-//      );
-// }
-
-// export default Home;
 'use client'
 
 import React, { createElement, useState } from 'react'
@@ -35,11 +22,6 @@ export default function Home() {
           <div className="flex lg:flex-1">
             <a href="#" className="-m-1.5 p-1.5">
               <span className="sr-only">Your Company</span>
-              <img
-                alt=""
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500"
-                className="h-8 w-auto"
-              />
             </a>
           </div>
           <div className="flex lg:hidden">

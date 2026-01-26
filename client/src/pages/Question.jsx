@@ -20,6 +20,8 @@ export default function Question() {
   const [ranSuccessfully, setRanSuccessfully] = useState(false);
   const [isSolved, setIsSolved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showSolvedBanner, setShowSolvedBanner] = useState(true);
+
 
 
   /* FETCH QUESTION */
@@ -37,6 +39,12 @@ export default function Question() {
       .finally(() => setLoading(false));
   }, [order, difficulty]);
 
+  /* RESET SOLVED BANNER */
+  useEffect(() => {
+  setShowSolvedBanner(true);
+}, [order]);
+
+
   /* SET STARTER CODE */
   useEffect(() => {
   if (question?.starterCode?.[language]) {
@@ -46,20 +54,21 @@ export default function Question() {
 
   /* CHECK SOLVED */
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-    if (!userId) return;
-      api.get("/progress", {
-        params: { userId, language, difficulty }
-      })
-      .then(res => res.ok ? res.json() : null)
-      .then(p => {
-        if (p?.solvedOrders?.includes(Number(order))) {
-          setIsSolved(true);
-        } else {
-          setIsSolved(false);
-        }
-      });
-  }, [order, language, difficulty]);
+  const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
+  api.get("/progress", {
+    params: { userId, language, difficulty }
+  })
+  .then(res => {
+    if (res.data?.solvedOrders?.includes(Number(order))) {
+      setIsSolved(true);
+    } else {
+      setIsSolved(false);
+    }
+  });
+}, [order, language, difficulty]);
+
 
   if (loading) return <div className="p-6 text-white">Loading...</div>;
   if (!question) return <div className="p-6 text-red-400">Question not found</div>;
@@ -128,11 +137,18 @@ export default function Question() {
           </>
         )}
 
-        {isSolved && (
-          <div className="mt-6 p-3 rounded bg-green-900 text-green-300">
-            ✅ You already solved this question
-          </div>
-        )}
+        {isSolved && showSolvedBanner && (
+        <div className="mt-6 p-3 rounded bg-green-900 text-green-300 flex justify-between items-center">
+          <span>✅ You already solved this question</span>
+          <button
+            onClick={() => setShowSolvedBanner(false)}
+            className="text-red-400 hover:text-red-300 font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       </div>
 
       {/* RIGHT */}
@@ -156,16 +172,23 @@ export default function Question() {
 
           <button
             onClick={handleMarkSolved}
-            disabled={!ranSuccessfully}
-            title={ranSuccessfully ? "Mark solved" : "Run code first"}
+            disabled={!ranSuccessfully && !isSolved}
+            title={
+              isSolved
+                ? "Already solved"
+                : ranSuccessfully
+                ? "Mark solved"
+                : "Run code first"
+            }
             className={`px-4 py-2 rounded ${
-              ranSuccessfully
+              ranSuccessfully || isSolved
                 ? "bg-green-600 hover:bg-green-700"
                 : "bg-gray-600 cursor-not-allowed"
             }`}
           >
             Mark as Solved
           </button>
+
         </div>
 
         {output && (

@@ -12,6 +12,7 @@ const userSolveHistorySchema = new mongoose.Schema(
       ref: "Problem",
       required: true
     },
+    title: String,
     language: String,
     difficulty: String,
     order: Number,
@@ -24,7 +25,7 @@ const userSolveHistorySchema = new mongoose.Schema(
 );
 
 userSolveHistorySchema.index(
-  { userId: 1, problemId: 1 },
+  { userId: 1, problemId: 1, language: 1 },
   { unique: true }
 );
 

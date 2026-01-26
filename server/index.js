@@ -7,6 +7,7 @@ const authRoutes=require("./routes/auth/auth.js");
 const questionsRoutes=require("./routes/questions.js");
 const progressRoutes=require("./routes/progress.js");
 const executeRoutes=require("./routes/execute.js");
+const historyRoutes=require("./routes/history.js");
 const app=express();
 const port=5000;
 
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use("/api/questions", questionsRoutes);
 app.use("/api/progress", progressRoutes);
+app.use("/api/history", historyRoutes);
 app.use("/api/execute", executeRoutes);
 
 
