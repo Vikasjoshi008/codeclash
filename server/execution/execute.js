@@ -1,6 +1,7 @@
 const express = require("express");
 const runCode = require("../utils/piston");
 const Question = require("../models/Problem");
+const templates= require("./templates");
 
 const router = express.Router();
 
@@ -29,29 +30,16 @@ router.post("/", async (req, res) => {
 
 
   const testCase = question.testCases[0];
-
+const template = templates[language];
 
     // ✅ Wrap user code safely
-const wrappedCode = `
-${code}
-
-try {
-  const input = ${JSON.stringify(testCase.input)};
-
-  // ✅ CALL solve CORRECTLY BASED ON INPUT SHAPE
-  if (Array.isArray(input)) {
-    solve(...input);
-  } else if (input && typeof input === "object") {
-    solve(input.nums, input.target);
-  } else {
-    throw new Error("Invalid test case input format");
-  }
-
-} catch (err) {
-  console.error(err.message);
+if (!template) {
+  return res.status(400).json({
+    error: "Unsupported language"
+  });
 }
-`;
 
+const wrappedCode = template(code, testCase.input);
 
     const pistonResult = await runCode({
       code: wrappedCode,

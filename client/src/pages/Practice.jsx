@@ -8,12 +8,15 @@ export default function Practice() {
   const [language, setLanguage] = useState("javascript");
   const [difficulty, setDifficulty] = useState("easy");
   const [currentOrder, setCurrentOrder] = useState(1);
+  const [loading, setLoading] = useState(true);
+
 
   const navigate = useNavigate();
 
   useEffect(() => {
   async function load() {
     try {
+      setLoading(true);
       // ✅ ALWAYS load questions
       const questionsRes = await api.get("/questions", {
         params: {
@@ -38,6 +41,8 @@ export default function Practice() {
 
     } catch (err) {
       console.error("Failed to load practice data", err);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -61,10 +66,6 @@ export default function Practice() {
         <option value="cpp">C++</option>
         <option value="c">C</option>
         <option value="csharp">C#</option>
-        <option value="go">Go</option>
-        <option value="ruby">Ruby</option>
-        <option value="php">PHP</option>
-        <option value="typescript">TypeScript</option>
       </select>
 
       {/* Difficulty Selector */}
@@ -86,7 +87,11 @@ export default function Practice() {
 
       {/* Questions List */}
       <div className="space-y-3">
-        {questions.length === 0 && (
+        {loading && (
+          <p className="text-gray-400 animate-pulse">Loading questions...</p>
+        )}
+
+        {!loading && questions.length === 0 && (
           <p className="text-gray-400">No questions found</p>
         )}
 

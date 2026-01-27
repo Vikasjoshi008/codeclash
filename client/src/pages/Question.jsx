@@ -21,9 +21,8 @@ export default function Question() {
   const [ranSuccessfully, setRanSuccessfully] = useState(false);
   const [isSolved, setIsSolved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
   const [showSolvedBanner, setShowSolvedBanner] = useState(true);
-
-
 
   /* FETCH QUESTION */
   useEffect(() => {
@@ -33,94 +32,92 @@ export default function Question() {
     setRanSuccessfully(false);
 
     getQuestionByOrder(language, difficulty, order)
-      .then(q => {setQuestion(q)})
+      .then((q) => {
+        setQuestion(q);
+      })
       .catch(() => setQuestion(null))
       .finally(() => setLoading(false));
   }, [language, order, difficulty]);
 
   /* RESET SOLVED BANNER */
   useEffect(() => {
-  setShowSolvedBanner(true);
-}, [order]);
-
+    setShowSolvedBanner(true);
+  }, [order]);
 
   /* SET STARTER CODE */
   useEffect(() => {
-  if (question?.starterCode?.[language]) {
-    setCode(question.starterCode[language]);
-  }
-}, [language, question]);
+    if (question?.starterCode?.[language]) {
+      setCode(question.starterCode[language]);
+    }
+  }, [language, question]);
 
   /* CHECK SOLVED */
   useEffect(() => {
-  api.get(`/progress/${language}/${difficulty}`)
-    .then(res => {
-      if (res.data.solvedOrders?.includes(Number(order))) {
-        setIsSolved(true);
-      } else {
-        setIsSolved(false);
-      }
-    })
-    .catch(() => setIsSolved(false));
-}, [order, language, difficulty]);
-
-
+    api
+      .get(`/progress/${language}/${difficulty}`)
+      .then((res) => {
+        if (res.data.solvedOrders?.includes(Number(order))) {
+          setIsSolved(true);
+        } else {
+          setIsSolved(false);
+        }
+      })
+      .catch(() => setIsSolved(false));
+  }, [order, language, difficulty]);
 
   if (loading) return <div className="p-6 text-white">Loading...</div>;
-  if (!question) return <div className="p-6 text-red-400">Question not found</div>;
+  if (!question)
+    return <div className="p-6 text-red-400">Question not found</div>;
 
   /* RUN CODE */
-const handleRun = async () => {
-  setOutput("");
-  setError("");
-  setRanSuccessfully(false);
+  const handleRun = async () => {
+    setOutput("");
+    setError("");
+    setRanSuccessfully(false);
+    setRunning(true);
 
-  try {
-    const response = await runCode(code, question._id, language);
+    try {
+      const response = await runCode(code, question._id, language);
 
-    console.log("RUN RESPONSE:", response);
+      console.log("RUN RESPONSE:", response);
 
-    const { stdout, stderr } = response;
+      const { stdout, stderr } = response;
 
-    // ✅ SUCCESS = no stderr
-    if (!stderr || stderr.trim() === "") {
-      setOutput(stdout || "");
-      setRanSuccessfully(true);
+      // ✅ SUCCESS = no stderr
+      if (!stderr || stderr.trim() === "") {
+        setOutput(stdout || "");
+        setRanSuccessfully(true);
 
-      // ✅ SAVE PROGRESS
+        // ✅ SAVE PROGRESS
         await api.post("/progress/advance", {
           problemId: question._id,
           title: question.title,
           language,
           difficulty,
-          order: Number(order)
+          order: Number(order),
         });
-    } else {
-      setError(stderr);
+      } else {
+        setError(stderr);
+      }
+    } catch (err) {
+      console.error("RUN ERROR:", err);
+      setError("Execution failed");
+    } finally {
+      setRunning(false);
     }
-
-  } catch (err) {
-    console.error("RUN ERROR:", err);
-    setError("Execution failed");
-  }
-};
-
+  };
 
   const handleNextQuestion = () => {
-  const nextOrder = Number(order) + 1;
+    const nextOrder = Number(order) + 1;
 
-  navigate(
-    `/practice/${difficulty}/${nextOrder}?language=${language}`
-  );
-};
-
+    navigate(`/practice/${difficulty}/${nextOrder}?language=${language}`);
+  };
 
   /* SPLIT DESCRIPTION */
   const [desc, rest] = question.description.split("Constraints:");
 
   return (
     <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
-
       {/* LEFT */}
       <div className="p-6 overflow-y-auto">
         <h1 className="text-2xl font-bold mb-2">{question.title}</h1>
@@ -154,7 +151,6 @@ const handleRun = async () => {
             </button>
           </div>
         )}
-
       </div>
 
       {/* RIGHT */}
@@ -165,24 +161,35 @@ const handleRun = async () => {
           theme="vs-dark"
           language={language}
           value={code}
-          onChange={v => setCode(v || "")}
+          onChange={(v) => setCode(v || "")}
         />
+
+        {running && (
+          <div className="mt-4 text-blue-400 animate-pulse">
+            ⏳ Running your code...
+          </div>
+        )}
 
         <div className="flex gap-4 mt-4">
           <button
             onClick={handleRun}
-            className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
+            disabled={running}
+            className={`px-4 py-2 rounded ${
+              running
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }`}
           >
-            Run Code
+            {running ? "Running..." : "Run Code"}
           </button>
 
           {ranSuccessfully && (
-          <button
-            onClick={handleNextQuestion}
-            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
-          >
-            Next Question →
-          </button>
+            <button
+              onClick={handleNextQuestion}
+              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+            >
+              Next Question →
+            </button>
           )}
         </div>
 
