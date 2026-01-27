@@ -9,6 +9,10 @@ const exampleSchema = new mongoose.Schema({
 const testCaseSchema = new mongoose.Schema({
   input: mongoose.Schema.Types.Mixed,
   output: mongoose.Schema.Types.Mixed,
+  expectedOutput: {
+  type: String,
+  required: true
+},
   hidden: Boolean
 });
 
@@ -19,10 +23,6 @@ const starterCodeSchema = new mongoose.Schema({
   cpp: String,
   c: String,
   csharp: String,
-  go: String,
-  ruby: String,
-  php: String,
-  typescript: String
 });
 
 const problemSchema = new mongoose.Schema({

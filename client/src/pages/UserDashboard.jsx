@@ -7,10 +7,21 @@ export default function UserDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get(`/history/`)
-      .then(res => setHistory(res.data))
-      .catch(err => console.error(err));
+    api
+      .get(`/history/`)
+      .then((res) => setHistory(res.data))
+      .catch((err) => console.error(err));
   }, []);
+
+  const formatDateTime = (date) =>
+  new Date(date).toLocaleString("en-US", {
+    month: "short",   // Sep
+    day: "numeric",   // 21
+    hour: "numeric",  // 4
+    minute: "2-digit",// 50
+    hour12: true      // PM
+  });
+
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-8">
@@ -21,12 +32,12 @@ export default function UserDashboard() {
       )}
 
       <div className="grid gap-4">
-        {history.map(h => (
+        {history.map((h) => (
           <div
             key={h._id}
             onClick={() =>
               navigate(
-                `/practice/${h.difficulty}/${h.order}?language=${h.language}`
+                `/practice/${h.difficulty}/${h.order}?language=${h.language}`,
               )
             }
             className="cursor-pointer p-4 bg-white/10 rounded hover:bg-white/20"
@@ -35,6 +46,10 @@ export default function UserDashboard() {
               {h.language.toUpperCase()} • {h.difficulty.toUpperCase()}
             </div>
             <div className="font-semibold">{h.title}</div>
+
+            <div className="text-xs text-gray-400 mt-1">
+              Solved at {formatDateTime(h.createdAt)}
+            </div>
           </div>
         ))}
       </div>

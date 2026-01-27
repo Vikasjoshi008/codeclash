@@ -1,9 +1,10 @@
-export async function runCode(code, questionId, language) {
-  const res = await fetch("http://localhost:5000/api/execute", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, questionId, language })
-  });
+import api from "./api";
 
-  return res.json();
-}
+export const runCode = async (code, questionId, language) => {
+  const res = await api.post("/execute", {
+    code,
+    questionId,
+    language,
+  });
+  return res.data;
+};

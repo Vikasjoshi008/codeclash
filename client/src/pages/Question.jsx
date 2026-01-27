@@ -13,7 +13,6 @@ export default function Question() {
 
   const language = searchParams.get("language") || "javascript";
   const difficulty = searchParams.get("difficulty") || "easy";
-
   const [question, setQuestion] = useState(null);
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
@@ -22,6 +21,7 @@ export default function Question() {
   const [isSolved, setIsSolved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
+  const [verdict, setVerdict] = useState(null);
   const [showSolvedBanner, setShowSolvedBanner] = useState(true);
 
   /* FETCH QUESTION */
@@ -30,6 +30,7 @@ export default function Question() {
     setOutput("");
     setError("");
     setRanSuccessfully(false);
+    setVerdict(null);
 
     getQuestionByOrder(language, difficulty, order)
       .then((q) => {
@@ -81,14 +82,29 @@ export default function Question() {
 
       console.log("RUN RESPONSE:", response);
 
-      const { stdout, stderr } = response;
+      const { stdout, stderr, verdict } = response;
 
       // ✅ SUCCESS = no stderr
-      if (!stderr || stderr.trim() === "") {
+      // if (!stderr || stderr.trim() === "") {
+      //   setOutput(stdout || "");
+      //   setRanSuccessfully(true);
+
+      //   // ✅ SAVE PROGRESS
+      //   await api.post("/progress/advance", {
+      //     problemId: question._id,
+      //     title: question.title,
+      //     language,
+      //     difficulty,
+      //     order: Number(order),
+      //   });
+      // } else {
+      //   setError(stderr);
+      // }
+      if (verdict === "ACCEPTED") {
         setOutput(stdout || "");
         setRanSuccessfully(true);
+        setVerdict("ACCEPTED");
 
-        // ✅ SAVE PROGRESS
         await api.post("/progress/advance", {
           problemId: question._id,
           title: question.title,
@@ -97,7 +113,8 @@ export default function Question() {
           order: Number(order),
         });
       } else {
-        setError(stderr);
+        setOutput(stdout || "");
+        setVerdict("WRONG_ANSWER");
       }
     } catch (err) {
       console.error("RUN ERROR:", err);
@@ -183,7 +200,17 @@ export default function Question() {
             {running ? "Running..." : "Run Code"}
           </button>
 
-          {ranSuccessfully && (
+          {verdict === "ACCEPTED" && (
+            <div className="mt-2 text-green-400 font-semibold">✅ Accepted</div>
+          )}
+
+          {verdict === "WRONG_ANSWER" && (
+            <div className="mt-2 text-red-400 font-semibold">
+              ❌ Wrong Answer
+            </div>
+          )}
+
+          {ranSuccessfully && verdict && (
             <button
               onClick={handleNextQuestion}
               className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
