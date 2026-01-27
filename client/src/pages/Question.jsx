@@ -141,11 +141,11 @@ export default function Question() {
         )}
 
         {isSolved && showSolvedBanner && (
-          <div className="mt-6 p-3 rounded bg-green-900 text-green-300 flex justify-between items-center">
+          <div className="mt-6 p-3 rounded bg-black text-green-300 flex justify-between items-center">
             <span>✅ You already solved this question</span>
             <button
               onClick={() => setShowSolvedBanner(false)}
-              className="text-red-400 hover:text-red-300 font-bold"
+              className="text-red-400 hover:text-red-300 font-bold cursor-pointer"
             >
               ✕
             </button>
