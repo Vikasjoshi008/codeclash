@@ -20,6 +20,7 @@ export default function Landing() {
           <h2 className="text-xl font-semibold mb-2">🧩 Practice Coding</h2>
           <p className="text-gray-300">
             Solve coding problems at your own pace and improve your skills.
+            you will get to solve same questions in all languages like (Javascript, Python, Java, C, C++, c#) which improves your coding skills.
           </p>
         </div>
 
@@ -30,7 +31,7 @@ export default function Landing() {
         >
           <h2 className="text-xl font-semibold mb-2">⚔️ 1v1 Online Challenge</h2>
           <p className="text-gray-300">
-            Compete live with other developers in real-time coding battles.
+            Compete live with other developers in real-time coding battles. And get suggestions to improve your coding skills.
           </p>
         </div>
 
