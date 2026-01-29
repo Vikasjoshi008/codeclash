@@ -8,6 +8,7 @@ const questionsRoutes=require("./routes/questions.js");
 const progressRoutes=require("./routes/progress.js");
 const executeRoutes=require("./execution/execute.js");
 const historyRoutes=require("./routes/history.js");
+const onevsoneRoutes=require("./routes/OnevsOne.js");
 const app=express();
 const port=5000;
 
@@ -22,6 +23,7 @@ app.use("/api/questions", questionsRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/execute", executeRoutes);
+app.use("/api/1v1", onevsoneRoutes);
 
 
 app.get("/", (req, res) => {
