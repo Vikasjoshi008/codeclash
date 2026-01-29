@@ -1,24 +1,17 @@
-import React,{ useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const OneVsOne = () => {
+function OneVOneLobby({ currentUser }) {
   const navigate = useNavigate();
-
-  const currentUser = localStorage.getItem("user");
-
-  if (!currentUser) {
-    return <p className="text-white">Please login again</p>;
-  }
 
   const [language, setLanguage] = useState("python");
   const [difficulty, setDifficulty] = useState("easy");
   const [status, setStatus] = useState("IDLE"); // IDLE | SEARCHING
   const [error, setError] = useState("");
 
-  // 🔁 Polling for match status
+  // 🔁 Polling effect
   useEffect(() => {
-  
     if (status !== "SEARCHING") return;
 
     const interval = setInterval(async () => {
@@ -29,17 +22,17 @@ const OneVsOne = () => {
 
         if (res.data.state === "IN_MATCH") {
           clearInterval(interval);
-          navigate(`/battle/1v1/match/${res.data.matchId}`);
+          navigate(`/1v1/match/${res.data.matchId}`);
         }
       } catch (err) {
-        console.error("Polling error:", err);
+        console.error(err);
       }
     }, 2000);
 
     return () => clearInterval(interval);
   }, [status, currentUser._id, navigate]);
 
-  // ▶️ Start matchmaking
+  // ▶️ Start 1v1
   const startMatch = async () => {
     try {
       setError("");
@@ -58,47 +51,43 @@ const OneVsOne = () => {
   };
 
   return (
-    <div style={{ padding: "40px", textAlign: "center" }}>
-      <h1>⚔️ 1v1 Code Battle</h1>
+    <div style={{ padding: "20px" }}>
+      <h2>⚔️ 1v1 Coding Challenge</h2>
 
       {status === "IDLE" && (
         <>
-          <div>
-            <label>Language</label><br />
-            <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-              <option value="python">Python</option>
-              <option value="javascript">JavaScript</option>
-              <option value="java">Java</option>
-            </select>
-          </div>
+          <label>Language</label>
+          <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+            <option value="python">Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="java">Java</option>
+          </select>
 
-          <br />
+          <br /><br />
 
-          <div>
-            <label>Difficulty</label><br />
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-            >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
+          <label>Difficulty</label>
+          <select
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+          >
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
 
-          <br />
+          <br /><br />
 
           <button onClick={startMatch}>Start 1v1</button>
         </>
       )}
 
       {status === "SEARCHING" && (
-        <p>🔍 Searching for opponent...</p>
+        <h3>🔍 Searching for opponent...</h3>
       )}
 
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
-};
+}
 
-export default OneVsOne;
+export default OneVOneLobby;

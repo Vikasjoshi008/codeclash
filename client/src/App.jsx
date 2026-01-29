@@ -11,6 +11,7 @@ import OneVsOne from "./pages/OneVsOne";
 import Question from "./pages/Question";
 import Navbar from "./components/Navbar";
 import UserDashboard from "./pages/UserDashboard";
+import UserMatchmakaing from "./pages/UserMatchmakaing";
 
 function App() {
   return (
@@ -36,10 +37,18 @@ function App() {
             path="/battle/1v1"
             element={
               <PrivateRoute>
-                <OneVsOne />
+                <OneVsOne/>
               </PrivateRoute>
             }
           />
+           <Route
+          path="/battle/1v1/match/:matchId"
+          element={
+            <PrivateRoute>
+              <UserMatchmakaing />
+            </PrivateRoute>
+          }
+        />
           <Route
             path="/practice"
             element={
