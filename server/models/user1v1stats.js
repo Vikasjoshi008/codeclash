@@ -54,4 +54,8 @@ const User1v1StatsSchema = new mongoose.Schema(
 );
 
 // helper method to update progress
-User1v1StatsSchema.methods.updatePro
+User1v1StatsSchema.methods.updateProgress = function () {
+  this.progressPercent = (this.winsInLevel / 10) * 100;
+};
+
+module.exports = mongoose.model("User1v1Stats", User1v1StatsSchema);
