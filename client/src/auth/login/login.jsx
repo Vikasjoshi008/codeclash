@@ -20,13 +20,10 @@ const Login = () => {
     try {
       const response = await login(form);
 
-      if (response.token && response.user) {
         localStorage.setItem("token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
         navigate("/dashboard");
-    } else {
-      setError(response.message || "Invalid credentials");
-    }
+    
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

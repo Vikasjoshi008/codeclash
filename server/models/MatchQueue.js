@@ -9,6 +9,11 @@ const MatchQueueSchema = new mongoose.Schema(
       unique: true,
     },
 
+    username: {
+      type: String,
+      required: true,
+    },
+
     level: {
       type: Number,
       required: true,

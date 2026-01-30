@@ -11,6 +11,7 @@ const router = express.Router();
 router.post("/start", async (req, res) => {
   try {
     const { userId, username, language, difficulty } = req.body;
+    console.log("1v1 START BODY:", req.body);
 
     // 1. Validation
     if (!userId || !language || !difficulty || !username) {
@@ -29,16 +30,11 @@ router.post("/start", async (req, res) => {
     }
 
     // 3. State check
-    if (stats.state !== "ONLINE") {
+    if (stats.state !== "IN_MATCH") {
       return res.status(400).json({
-        message: "User already searching or in a match",
+        message: "User already in a match",
       });
     }
-
-    // 4. Set user to SEARCHING
-    stats.state = "SEARCHING";
-    stats.lastActiveAt = new Date();
-    await stats.save();
 
     // 5. Try to find opponent
     const opponent = await MatchQueue.findOne({
@@ -47,6 +43,7 @@ router.post("/start", async (req, res) => {
       difficulty,
       userId: { $ne: userId },
     });
+    console.log("Opponent found:", opponent);
 
     // 6. If opponent found → create match
     if (opponent) {
@@ -58,17 +55,23 @@ router.post("/start", async (req, res) => {
         userId: opponent.userId,
       });
 
-      if (!opponentStats || opponentStats.state !== "SEARCHING") {
-        // opponent invalid, continue searching
+      stats.state = "SEARCHING";
+      stats.lastActiveAt = new Date();
+      await stats.save();
+
+      try {
         await MatchQueue.create({
           userId,
+          username,
           level: stats.level,
           language,
           difficulty,
         });
-
-        return res.json({ message: "Searching for opponent..." });
+      } catch (err) {
+        console.log("user alredy in queue");
       }
+
+      return res.json({ message: "Searching for opponent..." });
 
       // create match
       const match = await Match.create({
@@ -150,5 +153,19 @@ router.get("/status", async (req, res) => {
   }
 });
 
+router.post("/cancel", auth, async (req, res) => {
+  const { userId } = req.body;
+
+  const stats = await User1v1Stats.findOne({ userId });
+  if (!stats) return res.status(404).json({ message: "Not found" });
+
+  stats.state = "ONLINE";
+  stats.currentMatchId = null;
+  await stats.save();
+
+  await MatchQueue.deleteOne({ userId });
+
+  res.json({ message: "Search cancelled" });
+});
 
 module.exports = router;
