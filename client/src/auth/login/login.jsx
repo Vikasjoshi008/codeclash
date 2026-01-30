@@ -18,13 +18,15 @@ const Login = () => {
     setError("");
 
     try {
-      const data = await login(form);
-      if (data.token) {
-        localStorage.setItem("token", data.token);
+      const response = await login(form);
+
+      if (response.token && response.user) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
         navigate("/dashboard");
-      } else {
-        setError(data.message || "Invalid credentials");
-      }
+    } else {
+      setError(response.message || "Invalid credentials");
+    }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
