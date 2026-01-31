@@ -83,11 +83,6 @@ module.exports = (io) => {
         return;
       }
 
-      // let match = await Match.findOne({
-      //   state: "SEARCHING",
-      //   difficulty,
-      //   "players.1": { $exists: false },
-      // });
       let match = await Match.findOne({
         state: "SEARCHING",
         "players.1": { $exists: false },
@@ -179,44 +174,83 @@ module.exports = (io) => {
 
     /* ================= SUBMIT CODE ================= */
     socket.on("submitCode", async ({ matchId, userId, code, language }) => {
-      const match = await Match.findById(matchId).populate("problemId");
-      if (!match || match.state !== "IN_PROGRESS") return;
+      try {
+        const match = await Match.findById(matchId).populate("problemId");
+        if (!match || match.state !== "IN_PROGRESS") return;
 
-      const player = match.players.find((p) => p.userId.toString() === userId);
-      if (!player || player.code) return;
+        const player = match.players.find(
+          (p) => p.userId.toString() === userId,
+        );
+        if (!player || player.code) return;
 
-      player.timeTaken = Math.floor((Date.now() - match.startedAt) / 1000);
+        // ⏱ time taken
+        player.timeTaken = Math.floor((Date.now() - match.startedAt) / 1000);
 
-      const result = await runJudge({
-        code,
-        language,
-        testCases: match.problemId.testCases,
-      });
+        // 🧪 RUN JUDGE
+        let result;
+        try {
+          result = await runJudge({
+            code,
+            language,
+            testCases: match.problemId.testCases,
+          });
+        } catch (err) {
+          console.error("JUDGE CRASHED:", err);
+          result = { passed: 0, total: match.problemId.testCases.length };
+        }
 
-      player.code = code;
-      player.passedTestCases = result.passed;
-      player.totalTestCases = result.total;
-      player.submittedAt = new Date();
+        // 🛡 VALIDATE RESULT
+        const passed = typeof result.passed === "number" ? result.passed : 0;
+        const total =
+          typeof result.total === "number"
+            ? result.total
+            : match.problemId.testCases.length;
 
-      await match.save();
+        console.log("JUDGE RESULT:", {
+          userId,
+          passed,
+          total,
+          timeTaken: player.timeTaken,
+        });
 
-      io.to(matchId).emit("submissionUpdate", {
-        userId,
-        passed: result.passed,
-        total: result.total,
-      });
+        // 💾 SAVE SUBMISSION
+        player.code = code;
+        player.passedTestCases = passed;
+        player.totalTestCases = total;
+        player.submittedAt = new Date();
 
-      if (match.players.every((p) => p.code)) {
+        await match.save();
+
+        io.to(matchId).emit("submissionUpdate", {
+          userId,
+          passed,
+          total,
+        });
+
+        // 🏁 DECIDE WINNER WHEN BOTH SUBMITTED
+        if (!match.players.every((p) => p.code)) return;
+
         const [p1, p2] = match.players;
 
-        let winner =
-          p1.passedTestCases !== p2.passedTestCases
-            ? p1.passedTestCases > p2.passedTestCases
-              ? p1.userId
-              : p2.userId
-            : p1.timeTaken < p2.timeTaken
-              ? p1.userId
-              : p2.userId;
+        let winner = null;
+
+        // ❌ If one failed judge completely, other wins
+        if (p1.totalTestCases === 0 && p2.totalTestCases > 0) {
+          winner = p2.userId;
+        } else if (p2.totalTestCases === 0 && p1.totalTestCases > 0) {
+          winner = p1.userId;
+        }
+
+        // ✅ Higher correctness wins
+        else if (p1.passedTestCases !== p2.passedTestCases) {
+          winner =
+            p1.passedTestCases > p2.passedTestCases ? p1.userId : p2.userId;
+        }
+
+        // ⏱ Same correctness → faster wins
+        else {
+          winner = p1.timeTaken <= p2.timeTaken ? p1.userId : p2.userId;
+        }
 
         match.state = "FINISHED";
         match.winner = winner;
@@ -224,6 +258,8 @@ module.exports = (io) => {
 
         io.to(matchId).emit("matchResult", { winner });
         await emitSummaryAndElo(match, io);
+      } catch (err) {
+        console.error("submitCode error:", err);
       }
     });
 

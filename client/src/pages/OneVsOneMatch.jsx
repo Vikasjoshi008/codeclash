@@ -61,10 +61,14 @@ const OneVsOneMatch = () => {
       const safeDuration = Number(duration) || 15 * 60 * 1000;
       const safeStart = Number(startedAt);
 
-      if (!safeStart) return;
+      if (!safeStart) {
+        console.warn("Invalid startedAt:", startedAt);
+        return;
+      }
 
       clearInterval(timerRef.current);
 
+      // Set immediately so UI shows timer
       setTimeLeft(safeDuration - (Date.now() - safeStart));
 
       timerRef.current = setInterval(() => {
@@ -157,7 +161,7 @@ const OneVsOneMatch = () => {
 
           {problem && (
             <>
-              {timeLeft > 0 && (
+              {state === "IN_PROGRESS" && (
                 <p className="text-yellow-400 mb-3 text-center">
                   ⏱ {Math.floor(timeLeft / 60000)}:
                   {String(Math.floor((timeLeft % 60000) / 1000)).padStart(
