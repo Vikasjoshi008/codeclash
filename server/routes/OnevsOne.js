@@ -170,4 +170,45 @@ router.post("/cancel", auth, async (req, res) => {
   res.json({ message: "Search cancelled" });
 });
 
+/*
+GET /api/1v1/history
+*/
+router.get("/history", auth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const matches = await Match.find({
+      state: "FINISHED",
+      "players.userId": userId,
+    }).sort({ createdAt: -1 });
+
+    let wins = 0;
+    let losses = 0;
+
+    matches.forEach((m) => {
+      if (String(m.winner) === String(userId)) wins++;
+      else losses++;
+    });
+
+    res.json({
+      totalMatches: matches.length,
+      wins,
+      losses,
+      solved: matches.length,
+      matches: matches.map((m) => ({
+        _id: m._id,
+        difficulty: m.difficulty,
+        winner: m.winner,
+        createdAt: m.createdAt,
+      })),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load 1v1 history" });
+  }
+});
+
+module.exports = router;
+
+
 module.exports = router;
