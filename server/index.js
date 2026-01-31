@@ -32,6 +32,8 @@ app.use("/api/progress", progressRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/execute", executeRoutes);
 app.use("/api/1v1", onevsoneRoutes);
+app.use("/api/problems", require("./routes/problem.js"));
+
 
 app.get("/", (req, res) => {
   res.send("codeclash server is running");
@@ -50,11 +52,7 @@ const io = new Server(server, {
         methods: ["GET", "POST"],
         credentials: true
     },
-    transports: ["polling", "websocket"] // 🔥 ADD THIS
-});
-
-io.on("connection", (socket) => {
-  console.log("🔥 SOCKET CONNECTED:", socket.id);
+    transports: ["websocket"] // 🔥 ADD THIS
 });
 
 // ✅ LOAD MATCHMAKING SOCKET LOGIC

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import socket from "./socket";
 import "./App.css";
 
 import Login from "./auth/login/login";
@@ -14,6 +15,15 @@ import UserDashboard from "./pages/UserDashboard";
 import OneVsOneMatch from "./pages/OneVsOneMatch";
 
 function App() {
+  useEffect(() => {
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
   return (
     <>
       <BrowserRouter>

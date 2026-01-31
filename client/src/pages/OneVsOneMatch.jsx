@@ -1,14 +1,15 @@
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import socket from "../socket";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-import { useEffect, useState } from "react";
 import Editor from "@monaco-editor/react";
 
 const OneVsOneMatch = () => {
   const { matchId } = useParams();
   const { user } = useAuth();
 
+  /* ================= STATE ================= */
   const [state, setState] = useState("MATCHED");
   const [ready, setReady] = useState(false);
 
@@ -16,28 +17,60 @@ const OneVsOneMatch = () => {
   const [code, setCode] = useState("");
   const [language, setLanguage] = useState("python");
 
-  const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [opponentSubmitted, setOpponentSubmitted] = useState(false);
   const [result, setResult] = useState(null);
 
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [summary, setSummary] = useState(null);
+
+  const editorRef = useRef(null);
+  const timerRef = useRef(null);
+
+  /* ================= EDITOR ================= */
+  const handleEditorDidMount = (editor) => {
+    editorRef.current = editor;
+  };
+
   /* ================= SOCKET LISTENERS ================= */
   useEffect(() => {
+    if (!user) return;
+
     socket.on("matchUpdate", ({ state }) => {
       setState(state);
     });
 
     socket.on("problemAssigned", async ({ problemId }) => {
-      setLoading(true);
       try {
         const res = await axios.get(`/api/problems/${problemId}`);
         setProblem(res.data);
-        setCode(res.data.starterCode?.[language] || "");
+
+        const starter = res.data.starterCode?.[language] || "";
+        setCode(starter);
+
+        // ensure editor sync
+        setTimeout(() => {
+          editorRef.current?.setValue(starter);
+        }, 0);
       } catch (err) {
         console.error("Failed to load problem", err);
-      } finally {
-        setLoading(false);
       }
+    });
+
+    socket.on("matchStarted", ({ startedAt, duration }) => {
+      const safeDuration = Number(duration) || 15 * 60 * 1000;
+      const safeStart = Number(startedAt);
+
+      if (!safeStart) return;
+
+      clearInterval(timerRef.current);
+
+      setTimeLeft(safeDuration - (Date.now() - safeStart));
+
+      timerRef.current = setInterval(() => {
+        const remaining = safeDuration - (Date.now() - safeStart);
+        setTimeLeft(Math.max(0, remaining));
+      }, 1000);
     });
 
     socket.on("submissionUpdate", ({ userId }) => {
@@ -50,21 +83,38 @@ const OneVsOneMatch = () => {
       setResult(winner === user.id ? "WIN" : "LOSE");
     });
 
+    socket.on("matchTimeout", () => {
+      setResult("TIME_UP");
+    });
+
+    socket.on("matchSummary", (data) => {
+      setSummary(data);
+    });
+
     return () => {
       socket.off("matchUpdate");
       socket.off("problemAssigned");
+      socket.off("matchStarted");
       socket.off("submissionUpdate");
       socket.off("matchResult");
+      socket.off("matchTimeout");
+      socket.off("matchSummary");
+      clearInterval(timerRef.current);
     };
-  }, [user.id, language]);
+  }, [user, language]);
+
+  /* ================= GUARD ================= */
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] text-white flex items-center justify-center">
+        <p>Loading user…</p>
+      </div>
+    );
+  }
 
   /* ================= ACTIONS ================= */
-
   const markReady = () => {
-    socket.emit("playerReady", {
-      matchId,
-      userId: user.id,
-    });
+    socket.emit("playerReady", { matchId, userId: user.id });
     setReady(true);
   };
 
@@ -81,126 +131,107 @@ const OneVsOneMatch = () => {
   };
 
   /* ================= UI ================= */
-
   return (
     <div className="min-h-screen bg-[#0f172a] text-white p-6">
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* LEFT: PROBLEM */}
-        <div className="bg-[#020617] rounded-xl p-5 overflow-y-auto">
-          {!problem && state === "MATCHED" && (
-            <div className="text-center space-y-4">
-              <p className="text-gray-400">Waiting for players to be ready</p>
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6 h-[80vh]">
+        {/* ================= LEFT: PROBLEM ================= */}
+        <div className="bg-[#020617] p-5 rounded-xl h-full flex flex-col">
+          {!problem && (
+            <div className="flex-1 flex flex-col justify-center items-center">
+              <p className="text-gray-400 mb-3">Waiting for players</p>
               {!ready && (
                 <button
                   onClick={markReady}
-                  className="px-5 py-2 bg-indigo-600 rounded-lg"
+                  className="px-4 py-2 bg-indigo-600 rounded"
                 >
                   Ready
                 </button>
               )}
               {ready && (
-                <p className="text-yellow-400 animate-pulse">
+                <p className="text-yellow-400 mt-3 animate-pulse">
                   Waiting for opponent…
                 </p>
               )}
             </div>
           )}
 
-          {loading && (
-            <div className="flex justify-center py-10">
-              <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
-
           {problem && (
             <>
-              <h2 className="text-xl font-bold mb-2">{problem.title}</h2>
-
-              <p className="text-gray-300 mb-4 whitespace-pre-line">
-                {problem.description}
-              </p>
-
-              {problem.constraints?.length > 0 && (
-                <>
-                  <h4 className="font-semibold mb-1">Constraints:</h4>
-                  <ul className="list-disc list-inside text-gray-400 mb-4">
-                    {problem.constraints.map((c, i) => (
-                      <li key={i}>{c}</li>
-                    ))}
-                  </ul>
-                </>
+              {timeLeft > 0 && (
+                <p className="text-yellow-400 mb-3 text-center">
+                  ⏱ {Math.floor(timeLeft / 60000)}:
+                  {String(Math.floor((timeLeft % 60000) / 1000)).padStart(
+                    2,
+                    "0",
+                  )}
+                </p>
               )}
+
+              <div className="overflow-y-auto flex-1">
+                <h2 className="text-xl font-bold mb-2">{problem.title}</h2>
+                <p className="text-gray-300 whitespace-pre-line">
+                  {problem.description}
+                </p>
+              </div>
             </>
           )}
         </div>
 
-        {/* RIGHT: CODE EDITOR */}
-        <div className="bg-[#020617] rounded-xl p-5 flex flex-col">
-          <div className="flex justify-between mb-2">
-            <select
-              value={language}
-              onChange={(e) => {
-                setLanguage(e.target.value);
-                if (problem?.starterCode?.[e.target.value]) {
-                  setCode(problem.starterCode[e.target.value]);
-                }
-              }}
-              className="bg-[#020617] border border-gray-700 rounded px-2 py-1"
-            >
-              <option value="python">Python</option>
-              <option value="javascript">JavaScript</option>
-              <option value="java">Java</option>
-            </select>
-
-            <button
-              onClick={submitCode}
-              disabled={submitted || !problem || state !== "IN_PROGRESS"}
-              className={`px-4 py-1 rounded-lg ${
-                submitted
-                  ? "bg-gray-600"
-                  : "bg-green-600 hover:bg-green-700"
-              }`}
-            >
-              {submitted ? "Submitted" : "Submit"}
-            </button>
-          </div>
-
+        {/* ================= RIGHT: EDITOR ================= */}
+        <div className="bg-[#020617] p-5 rounded-xl h-full flex flex-col">
           <Editor
-            height="400px"
-            language={language}
+            className="flex-1"
             theme="vs-dark"
-            value={code}
+            defaultLanguage={language}
+            defaultValue={code}
+            onMount={handleEditorDidMount}
             onChange={(value) => setCode(value || "")}
+            options={{
+              minimap: { enabled: false },
+              fontSize: 14,
+              scrollBeyondLastLine: false,
+              readOnly: submitted,
+            }}
           />
 
-          {submitted && (
-            <p className="text-yellow-400 text-center mt-2">
-              ⏳ Waiting for opponent submission…
-            </p>
-          )}
+          <button
+            onClick={submitCode}
+            disabled={submitted || !problem || state !== "IN_PROGRESS"}
+            className={`mt-3 px-4 py-2 rounded ${
+              submitted ? "bg-gray-600" : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            {submitted ? "Submitted" : "Submit"}
+          </button>
 
           {opponentSubmitted && !result && (
-            <p className="text-blue-400 text-center mt-1">
+            <p className="text-blue-400 mt-2 text-center">
               👀 Opponent has submitted
             </p>
           )}
 
           {result && (
-            <div className="text-center mt-4">
-              {result === "WIN" ? (
-                <p className="text-green-400 text-xl font-bold">
-                  🎉 You Won!
+            <p className="mt-3 text-center text-xl font-bold">
+              {result === "WIN"
+                ? "🎉 You Won!"
+                : result === "TIME_UP"
+                  ? "⏰ Time Up"
+                  : "😢 You Lost"}
+            </p>
+          )}
+
+          {summary && (
+            <div className="mt-4 bg-black p-4 rounded">
+              <h3 className="font-bold mb-2">📊 Match Summary</h3>
+              {summary.players.map((p) => (
+                <p key={p.userId}>
+                  {p.userId === user.id ? "You" : "Opponent"} — {p.passed}/
+                  {p.total} in {p.timeTaken}s
                 </p>
-              ) : (
-                <p className="text-red-400 text-xl font-bold">
-                  😢 You Lost
-                </p>
-              )}
+              ))}
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
