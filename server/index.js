@@ -20,7 +20,10 @@ const port = 5000;
 
 /* ---------- MIDDLEWARE ---------- */
 app.use(cors({
-  origin: process.env.FRONTEND_URL ,
+  origin: [
+    "http://localhost:5173",
+    "https://your-frontend.vercel.app"
+  ],
   credentials: true
 }));
 app.use(express.json());
