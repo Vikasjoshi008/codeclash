@@ -59,20 +59,26 @@ const OneVsOneMatch = () => {
 
     socket.on("matchStarted", ({ startedAt, duration }) => {
       const safeDuration = Number(duration) || 15 * 60 * 1000;
-      const safeStart = Number(startedAt);
 
-      if (!safeStart) {
-        console.warn("Invalid startedAt:", startedAt);
+      // 🔒 HARD RESET TIMER BASE
+      const start =
+        typeof startedAt === "number"
+          ? startedAt
+          : new Date(startedAt).getTime();
+
+      if (!start || Number.isNaN(start)) {
+        console.error("Invalid startedAt:", startedAt);
         return;
       }
 
       clearInterval(timerRef.current);
 
-      // Set immediately so UI shows timer
-      setTimeLeft(safeDuration - (Date.now() - safeStart));
+      // ✅ IMPORTANT: show full time immediately
+      setTimeLeft(safeDuration);
 
       timerRef.current = setInterval(() => {
-        const remaining = safeDuration - (Date.now() - safeStart);
+        const elapsed = Date.now() - start;
+        const remaining = safeDuration - elapsed;
         setTimeLeft(Math.max(0, remaining));
       }, 1000);
     });
@@ -126,6 +132,10 @@ const OneVsOneMatch = () => {
     if (submitted || state !== "IN_PROGRESS") return;
 
     setSubmitted(true);
+
+    // ⏸ STOP TIMER FOR THIS USER
+    clearInterval(timerRef.current);
+
     socket.emit("submitCode", {
       matchId,
       userId: user.id,
@@ -168,6 +178,12 @@ const OneVsOneMatch = () => {
                     2,
                     "0",
                   )}
+                </p>
+              )}
+
+              {submitted && (
+                <p className="text-gray-400 text-center mt-2">
+                  ⏸ Timer stopped after submission
                 </p>
               )}
 

@@ -160,8 +160,10 @@ module.exports = (io) => {
 
         io.to(matchId).emit("matchUpdate", { state: "IN_PROGRESS" });
         io.to(matchId).emit("matchStarted", {
-          startedAt: match.startedAt,
-          duration: match.duration || 15 * 60 * 1000, // fallback
+          startedAt: match.startedAt.getTime
+            ? match.startedAt.getTime()
+            : Number(match.startedAt),
+          duration: match.duration || 15 * 60 * 1000,
         });
 
         io.to(matchId).emit("problemAssigned", {
