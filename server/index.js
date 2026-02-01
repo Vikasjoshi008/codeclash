@@ -19,7 +19,6 @@ const app = express();
 const port = 5000;
 
 /* ---------- MIDDLEWARE ---------- */
-app.options("*", cors());
 app.use(
   cors({
     origin: [
