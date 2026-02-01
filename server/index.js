@@ -19,6 +19,7 @@ const app = express();
 const port = 5000;
 
 /* ---------- MIDDLEWARE ---------- */
+app.options("*", cors());
 app.use(
   cors({
     origin: [
@@ -31,7 +32,6 @@ app.use(
 );
 
 // VERY IMPORTANT: allow preflight
-app.options("*", cors());
 app.use(express.json());
 
 /* ---------- ROUTES ---------- */
