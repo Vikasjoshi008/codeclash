@@ -14,6 +14,8 @@ const progressRoutes = require("./routes/progress.js");
 const executeRoutes = require("./execution/execute.js");
 const historyRoutes = require("./routes/history.js");
 const onevsoneRoutes = require("./routes/OnevsOne.js");
+const problemRoutes = require("./routes/problem.js");
+const matchRoutes = require("./routes/matches.js"); 
 
 const app = express();
 const port = 5000;
@@ -40,7 +42,8 @@ app.use("/api/progress", progressRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/execute", executeRoutes);
 app.use("/api/1v1", onevsoneRoutes);
-app.use("/api/problems", require("./routes/problem.js"));
+app.use("/api/problems", problemRoutes);
+app.use("/api/matches", matchRoutes)
 
 
 app.get("/", (req, res) => {

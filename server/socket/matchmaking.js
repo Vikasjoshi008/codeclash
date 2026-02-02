@@ -94,26 +94,30 @@ module.exports = (io) => {
       if (!match) {
         match = await Match.create({
           difficulty,
-          players: [{ userId, socketId: socket.id }],
+          players: [{ userId, socketId: socket.id, name: User.username }],
           state: "SEARCHING",
-        });
-        console.log("MATCH STATE:", {
-          matchId: match._id.toString(),
-          players: match.players.map((p) => p.userId.toString()),
-          state: match.state,
         });
 
         socket.join(match._id.toString());
         socket.emit("searching");
         return;
       }
+      const user = await User.findById(userId).select("username");
 
-      match.players.push({ userId, socketId: socket.id });
+      match.players.push({
+        userId,
+        socketId: socket.id,
+        name: user.username,
+      });
       match.state = "MATCHED";
       await match.save();
 
       socket.join(match._id.toString());
       io.to(match._id.toString()).emit("matchFound", { matchId: match._id });
+    });
+
+    socket.on("joinMatch", ({ matchId }) => {
+      socket.join(matchId);
     });
 
     /* ================= PLAYER READY ================= */
@@ -269,25 +273,64 @@ module.exports = (io) => {
     });
 
     /* ================= DISCONNECT ================= */
+    // socket.on("disconnect", async () => {
+    //   onlinePlayers.delete(socket.id);
+    //   io.emit("playerCount", onlinePlayers.size);
+
+    //   const match = await Match.findOne({
+    //     "players.socketId": socket.id,
+    //     state: { $in: ["SEARCHING", "MATCHED", "IN_PROGRESS"] },
+    //   });
+    //   if (!match) return;
+
+    //   match.state = "CANCELLED";
+    //   await match.save();
+
+    //   await Match.deleteOne({ _id: match._id });
+
+    //   io.to(match._id.toString()).emit(
+    //     "matchCancelled",
+    //     "Opponent disconnected",
+    //   );
+    // });
     socket.on("disconnect", async () => {
       onlinePlayers.delete(socket.id);
       io.emit("playerCount", onlinePlayers.size);
 
       const match = await Match.findOne({
         "players.socketId": socket.id,
-        state: { $in: ["SEARCHING", "MATCHED", "IN_PROGRESS"] },
+        state: "IN_PROGRESS",
       });
+
       if (!match) return;
 
-      match.state = "CANCELLED";
+      const [p1, p2] = match.players;
+
+      // 🔎 Identify leaver and winner
+      const leaver = p1.socketId === socket.id ? p1 : p2;
+      const winner = p1.socketId === socket.id ? p2 : p1;
+
+      match.state = "FINISHED";
+      match.winner = winner.userId;
+
       await match.save();
 
+      // 📢 Inform opponent
+      io.to(match._id.toString()).emit("matchResult", {
+        winner: winner.userId,
+        reason: "OPPONENT_LEFT",
+      });
+
+      // 📊 Apply ELO + summary
+      await emitSummaryAndElo(match, io);
+
+      // 🧹 Clean DB so user can requeue
       await Match.deleteOne({ _id: match._id });
 
-      io.to(match._id.toString()).emit(
-        "matchCancelled",
-        "Opponent disconnected",
-      );
+      console.log("FORFEIT:", {
+        leaver: leaver.userId.toString(),
+        winner: winner.userId.toString(),
+      });
     });
   });
 };

@@ -8,4 +8,4 @@ function calculateElo(winnerElo, loserElo, k = 32) {
   };
 }
 
-module.exports = calculateElo;
+export default calculateElo;

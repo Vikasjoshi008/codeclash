@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import socket from "../socket";
-import api from "../services/api"
+import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Editor from "@monaco-editor/react";
 
@@ -26,6 +26,7 @@ const OneVsOneMatch = () => {
 
   const editorRef = useRef(null);
   const timerRef = useRef(null);
+  const [players, setPlayers] = useState([]);
 
   /* ================= EDITOR ================= */
   const handleEditorDidMount = (editor) => {
@@ -33,6 +34,43 @@ const OneVsOneMatch = () => {
   };
 
   /* ================= SOCKET LISTENERS ================= */
+  useEffect(() => {
+    if (!socket || !matchId || !user) return;
+
+    socket.emit("joinMatch", {
+      matchId,
+      userId: user.id,
+    });
+  }, [matchId, user]);
+
+  useEffect(() => {
+    if (!matchId) return;
+
+    const fetchPlayers = async () => {
+      try {
+        const res = await api.get(`/api/matches/${matchId}`);
+        setPlayers(res.data.players || []);
+      } catch (err) {
+        console.error("Failed to load match players");
+      }
+    };
+
+    fetchPlayers();
+  }, [matchId]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("matchFound", ({ players }) => {
+      console.log("MATCH FOUND:", players);
+      setPlayers(players);
+    });
+
+    return () => {
+      socket.off("matchFound");
+    };
+  }, [socket]);
+
   useEffect(() => {
     if (!user) return;
 
@@ -90,6 +128,7 @@ const OneVsOneMatch = () => {
     });
 
     socket.on("matchResult", ({ winner }) => {
+      clearInterval(timerRef.current);
       setResult(winner === user.id ? "WIN" : "LOSE");
     });
 
@@ -185,6 +224,12 @@ const OneVsOneMatch = () => {
                 <p className="text-gray-400 text-center mt-2">
                   ⏸ Timer stopped after submission
                 </p>
+              )}
+
+              {players.length === 2 && (
+                <h2>
+                  {players[0].name} vs {players[1].name}
+                </h2>
               )}
 
               <div className="overflow-y-auto flex-1">
