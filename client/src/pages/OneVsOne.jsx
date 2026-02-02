@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import socket from "../socket";
-import axios from "axios";
+import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -15,7 +15,6 @@ const OneVsOne = () => {
 
   /* ✅ CONNECT SOCKET ONCE */
   useEffect(() => {
-
     socket.on("searching", () => {
       console.log("Searching for opponent...");
     });
@@ -51,22 +50,17 @@ const OneVsOne = () => {
       setError("");
       setStatus("SEARCHING");
 
-      await axios.post(
-        "/api/1v1/start",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
+      // ✅ correct API call (goes to Render backend)
+      await api.post("/1v1/start");
 
+      // ✅ socket matchmaking
       socket.emit("findMatch", {
         userId: user.id,
         language,
         difficulty,
       });
     } catch (err) {
+      console.error(err);
       setStatus("IDLE");
       setError("Failed to start match");
     }

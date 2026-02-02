@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import socket from "../socket";
-import axios from "axios";
+import api from "../services/api"
 import { useAuth } from "../context/AuthContext";
 import Editor from "@monaco-editor/react";
 
@@ -42,7 +42,7 @@ const OneVsOneMatch = () => {
 
     socket.on("problemAssigned", async ({ problemId }) => {
       try {
-        const res = await axios.get(`/api/problems/${problemId}`);
+        const res = await api.get(`/problems/${problemId}`);
         setProblem(res.data);
 
         const starter = res.data.starterCode?.[language] || "";
