@@ -12,6 +12,8 @@ const OneVsOne = () => {
   const [difficulty, setDifficulty] = useState("easy");
   const [status, setStatus] = useState("IDLE");
   const [error, setError] = useState("");
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [noOpponent, setNoOpponent] = useState(false);
 
   /* ✅ CONNECT SOCKET ONCE */
   useEffect(() => {
@@ -20,6 +22,9 @@ const OneVsOne = () => {
     });
 
     socket.on("matchFound", ({ matchId }) => {
+      if (searchTimeout) clearTimeout(searchTimeout);
+
+      setNoOpponent(false);
       setStatus("MATCHED");
       navigate(`/battle/1v1/match/${matchId}`);
     });
@@ -40,7 +45,7 @@ const OneVsOne = () => {
       socket.off("matchError");
       socket.off("matchCancelled");
     };
-  }, [navigate]);
+  }, [navigate, searchTimeout]);
 
   if (loading) return <p>Loading...</p>;
   if (!user) return <p>Please login again</p>;
@@ -48,6 +53,7 @@ const OneVsOne = () => {
   const startMatch = async () => {
     try {
       setError("");
+      setNoOpponent(false);
       setStatus("SEARCHING");
 
       // ✅ correct API call (goes to Render backend)
@@ -59,6 +65,13 @@ const OneVsOne = () => {
         language,
         difficulty,
       });
+
+      const timeout = setTimeout(() => {
+        setStatus("IDLE");
+        setNoOpponent(true);
+      }, 12000);
+
+      setSearchTimeout(timeout);
     } catch (err) {
       console.error(err);
       setStatus("IDLE");
@@ -103,7 +116,25 @@ const OneVsOne = () => {
         </>
       )}
 
-      {status === "SEARCHING" && <p>🔍 Searching for opponent...</p>}
+      {status === "SEARCHING" && (
+        <p className="text-yellow-400">🔍 Searching for opponent...</p>
+      )}
+
+      {noOpponent && (
+        <p className="text-red-400 mt-3">
+          😔 Sorry, no opponents available right now.
+        </p>
+      )}
+
+      {noOpponent && (
+        <button
+          className="mt-3 px-4 py-2 bg-indigo-600 rounded"
+          onClick={startMatch}
+        >
+          Try Again
+        </button>
+      )}
+
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
