@@ -71,15 +71,14 @@ module.exports = (io) => {
 
     /* ================= FIND MATCH ================= */
     socket.on("findMatch", async ({ userId, difficulty }) => {
-      const existing = await Match.findOne({
+      await Match.deleteMany({
         "players.userId": userId,
-        state: { $in: ["SEARCHING", "MATCHED", "IN_PROGRESS"] },
+        state: "SEARCHING",
       });
 
-      console.log("FIND MATCH:", {
-        userId,
-        difficulty,
-        socketId: socket.id,
+      const existing = await Match.findOne({
+        "players.userId": userId,
+        state: "IN_PROGRESS",
       });
 
       if (existing) {
@@ -282,6 +281,8 @@ module.exports = (io) => {
 
       match.state = "CANCELLED";
       await match.save();
+
+      await Match.deleteOne({ _id: match._id });
 
       io.to(match._id.toString()).emit(
         "matchCancelled",
