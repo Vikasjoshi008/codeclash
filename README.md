@@ -6,9 +6,7 @@ It features live matchmaking, code evaluation, timers, ELO ranking, and a modern
 ---
 
 ## 🚀 Live Demo
-
-- **Frontend (Vercel)**: https://codeclash-three.vercel.app  
-- **Backend (Render)**: https://codeclash-77pa.onrender.com
+https://codeclash-three.vercel.app  
 
 ---
 
