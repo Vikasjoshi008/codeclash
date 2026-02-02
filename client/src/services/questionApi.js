@@ -1,43 +1,17 @@
-const API_URL = import.meta.env.VITE_API_URL;
+import api from "./api";
 
 /* ================= GET QUESTIONS LIST ================= */
-export async function getQuestions(language, difficulty) {
-  const token = localStorage.getItem("token");
-
-  const res = await fetch(
-    `${API_URL}/questions?language=${language}&difficulty=${difficulty}`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch questions");
-  }
-
-  return res.json();
-}
+export const getQuestions = async (language, difficulty) => {
+  const res = await api.get("/questions", {
+    params: { language, difficulty },
+  });
+  return res.data;
+};
 
 /* ================= GET QUESTION BY ORDER ================= */
-export async function getQuestionByOrder(language, difficulty, order) {
-  const token = localStorage.getItem("token");
-
-  const res = await fetch(
-    `${API_URL}/questions/${order}?language=${language}&difficulty=${difficulty}`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch question");
-  }
-
-  return res.json();
-}
+export const getQuestionByOrder = async (language, difficulty, order) => {
+  const res = await api.get(`/questions/${order}`, {
+    params: { language, difficulty },
+  });
+  return res.data;
+};
