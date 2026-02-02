@@ -92,25 +92,29 @@ https://codeclash-three.vercel.app
 
 <img width="305" height="516" alt="image" src="https://github.com/user-attachments/assets/77739e54-93eb-4c58-9a33-d668a58d24d6" />
 
-▶️ Run Locally
-Backend
-cd server
-npm install
+---
+
+▶️ Run Locally<br>
+Backend <br>
+cd server<br>
+npm install<br>
 npm run dev
 
-Frontend
-cd client
-npm install
+Frontend<br>
+cd client<br>
+npm install<br>
 npm run dev
 
--🎯 Future Improvements
--Spectator mode for 1v1 battles
--Chat during match
--More languages support
--Leaderboards
--Custom contests
+---
 
-👨‍💻 Author
-Vikas Joshi
-Full-Stack Developer
-📌 India
+🎯 Future Improvements<br>
+Spectator mode for 1v1 battles<br>
+Chat during match<br>
+More languages support<br>
+Leaderboards<br>
+Custom contests<br>
+
+👨‍💻 Author<br>
+Vikas Joshi<br>
+Full-Stack Developer<br>
+📌India<br>
