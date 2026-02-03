@@ -13,6 +13,7 @@ export default function Question() {
 
   const language = searchParams.get("language") || "javascript";
   const difficulty = searchParams.get("difficulty") || "easy";
+
   const [question, setQuestion] = useState(null);
   const [code, setCode] = useState("");
   const [output, setOutput] = useState("");
@@ -33,9 +34,7 @@ export default function Question() {
     setVerdict(null);
 
     getQuestionByOrder(language, difficulty, order)
-      .then((q) => {
-        setQuestion(q);
-      })
+      .then((q) => setQuestion(q))
       .catch(() => setQuestion(null))
       .finally(() => setLoading(false));
   }, [language, order, difficulty]);
@@ -66,9 +65,19 @@ export default function Question() {
       .catch(() => setIsSolved(false));
   }, [order, language, difficulty]);
 
-  if (loading) return <div className="p-6 text-white">Loading...</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#020617] text-gray-300">
+        Loading...
+      </div>
+    );
+
   if (!question)
-    return <div className="p-6 text-red-400">Question not found</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#020617] text-red-400">
+        Question not found
+      </div>
+    );
 
   /* RUN CODE */
   const handleRun = async () => {
@@ -79,27 +88,8 @@ export default function Question() {
 
     try {
       const response = await runCode(code, question._id, language);
+      const { stdout, verdict } = response;
 
-      console.log("RUN RESPONSE:", response);
-
-      const { stdout, stderr, verdict } = response;
-
-      // ✅ SUCCESS = no stderr
-      // if (!stderr || stderr.trim() === "") {
-      //   setOutput(stdout || "");
-      //   setRanSuccessfully(true);
-
-      //   // ✅ SAVE PROGRESS
-      //   await api.post("/progress/advance", {
-      //     problemId: question._id,
-      //     title: question.title,
-      //     language,
-      //     difficulty,
-      //     order: Number(order),
-      //   });
-      // } else {
-      //   setError(stderr);
-      // }
       if (verdict === "ACCEPTED") {
         setOutput(stdout || "");
         setRanSuccessfully(true);
@@ -116,8 +106,7 @@ export default function Question() {
         setOutput(stdout || "");
         setVerdict("WRONG_ANSWER");
       }
-    } catch (err) {
-      console.error("RUN ERROR:", err);
+    } catch {
       setError("Execution failed");
     } finally {
       setRunning(false);
@@ -126,27 +115,27 @@ export default function Question() {
 
   const handleNextQuestion = () => {
     const nextOrder = Number(order) + 1;
-
     navigate(`/practice/${difficulty}/${nextOrder}?language=${language}`);
   };
 
-  /* SPLIT DESCRIPTION */
   const [desc, rest] = question.description.split("Constraints:");
 
   return (
-    <div className="grid grid-cols-2 min-h-screen bg-[#020617] text-white">
-      {/* LEFT */}
-      <div className="p-6 overflow-y-auto">
-        <h1 className="text-2xl font-bold mb-2">{question.title}</h1>
+    <div className="min-h-screen bg-[#020617] text-white grid grid-cols-1 lg:grid-cols-2">
+      {/* ===== LEFT: QUESTION ===== */}
+      <div className="p-6 overflow-y-auto border-b lg:border-b-0 lg:border-r border-white/10">
+        <h1 className="text-2xl font-extrabold mb-3">
+          {order}. {question.title}
+        </h1>
 
-        <pre className="whitespace-pre-wrap text-gray-200 leading-relaxed">
+        <pre className="whitespace-pre-wrap text-gray-300 leading-relaxed">
           {desc}
         </pre>
 
         {rest && (
           <>
-            <h3 className="mt-6 font-semibold">Constraints</h3>
-            <ul className="list-disc ml-6 mt-2 text-gray-300">
+            <h3 className="mt-6 font-semibold text-lg">Constraints</h3>
+            <ul className="list-disc ml-6 mt-3 text-gray-400 space-y-1">
               {rest
                 .split("\n")
                 .filter(Boolean)
@@ -158,11 +147,13 @@ export default function Question() {
         )}
 
         {isSolved && showSolvedBanner && (
-          <div className="mt-6 p-3 rounded bg-black text-green-300 flex justify-between items-center">
-            <span>✅ You already solved this question</span>
+          <div className="mt-6 p-4 rounded-xl bg-black/40 border border-green-500/30 flex justify-between items-center">
+            <span className="text-green-400">
+              ✅ You already solved this question
+            </span>
             <button
               onClick={() => setShowSolvedBanner(false)}
-              className="text-red-400 hover:text-red-300 font-bold cursor-pointer"
+              className="cursor-pointer text-red-400 hover:text-red-300 font-bold"
             >
               ✕
             </button>
@@ -170,11 +161,11 @@ export default function Question() {
         )}
       </div>
 
-      {/* RIGHT */}
+      {/* ===== RIGHT: EDITOR ===== */}
       <div className="p-4 flex flex-col">
         <Editor
           key={language}
-          height="60vh"
+          height="55vh"
           theme="vs-dark"
           language={language}
           value={code}
@@ -182,16 +173,16 @@ export default function Question() {
         />
 
         {running && (
-          <div className="mt-4 text-blue-400 animate-pulse">
+          <p className="mt-3 text-blue-400 animate-pulse">
             ⏳ Running your code...
-          </div>
+          </p>
         )}
 
-        <div className="flex gap-4 mt-4">
+        <div className="flex flex-wrap gap-4 mt-4 items-center">
           <button
             onClick={handleRun}
             disabled={running}
-            className={`px-4 py-2 rounded ${
+            className={`cursor-pointer px-5 py-2.5 rounded-xl font-semibold transition ${
               running
                 ? "bg-gray-600 cursor-not-allowed"
                 : "bg-indigo-600 hover:bg-indigo-700"
@@ -201,19 +192,21 @@ export default function Question() {
           </button>
 
           {verdict === "ACCEPTED" && (
-            <div className="mt-2 text-green-400 font-semibold">✅ Accepted</div>
+            <span className="text-green-400 font-semibold">
+              ✅ Accepted
+            </span>
           )}
 
           {verdict === "WRONG_ANSWER" && (
-            <div className="mt-2 text-red-400 font-semibold">
+            <span className="text-red-400 font-semibold">
               ❌ Wrong Answer
-            </div>
+            </span>
           )}
 
           {ranSuccessfully && verdict && (
             <button
               onClick={handleNextQuestion}
-              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+              className="cursor-pointer bg-green-600 hover:bg-green-700 px-5 py-2.5 rounded-xl font-semibold transition"
             >
               Next Question →
             </button>
@@ -221,13 +214,13 @@ export default function Question() {
         </div>
 
         {output && (
-          <pre className="mt-4 bg-black/70 p-4 rounded text-green-400">
+          <pre className="mt-4 bg-black/60 p-4 rounded-xl text-green-400 overflow-x-auto">
             {output}
           </pre>
         )}
 
         {error && (
-          <pre className="mt-4 bg-black/70 p-4 rounded text-red-400">
+          <pre className="mt-4 bg-black/60 p-4 rounded-xl text-red-400">
             {error}
           </pre>
         )}

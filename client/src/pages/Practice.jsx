@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
@@ -10,85 +10,94 @@ export default function Practice() {
   const [currentOrder, setCurrentOrder] = useState(1);
   const [loading, setLoading] = useState(true);
 
-
   const navigate = useNavigate();
 
   useEffect(() => {
-  async function load() {
-    try {
-      setLoading(true);
-      // ✅ ALWAYS load questions
-      const questionsRes = await api.get("/questions", {
-        params: {
-          difficulty: difficulty.toLowerCase()
+    async function load() {
+      try {
+        setLoading(true);
+
+        const questionsRes = await api.get("/questions", {
+          params: {
+            difficulty: difficulty.toLowerCase(),
+          },
+        });
+
+        setQuestions(questionsRes.data);
+
+        const token = localStorage.getItem("token");
+        const userId = token ? jwtDecode(token).id : null;
+
+        if (userId) {
+          const progressRes = await api.get(
+            `/progress/${language}/${difficulty}`,
+          );
+          setCurrentOrder(progressRes.data.currentOrder || 1);
+        } else {
+          setCurrentOrder(1);
         }
-      });
-
-      setQuestions(questionsRes.data);
-
-      // ✅ Load progress ONLY if logged in
-      const token = localStorage.getItem("token");
-      const userId = token ? jwtDecode(token).id : null;
-      if (userId) {
-        const progressRes = await api.get(
-          `/progress/${language}/${difficulty}`
-        );
-
-        setCurrentOrder(progressRes.data.currentOrder || 1);
-      } else {
-        setCurrentOrder(1);
+      } catch (err) {
+        console.error("Failed to load practice data", err);
+      } finally {
+        setLoading(false);
       }
-
-    } catch (err) {
-      console.error("Failed to load practice data", err);
-    } finally {
-      setLoading(false);
     }
-  }
 
-  load();
-}, [language, difficulty]);
-
+    load();
+  }, [language, difficulty]);
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-8">
-      <h1 className="text-3xl font-bold mb-6">Practice Coding</h1>
-
-      {/* Language Selector */}
-      <select
-        className="mb-6 bg-black/40 border border-white/20 px-4 py-2 rounded"
-        value={language}
-        onChange={(e) => setLanguage(e.target.value)}
-      >
-        <option value="javascript">JavaScript</option>
-        <option value="python">Python</option>
-        <option value="java">Java</option>
-        <option value="cpp">C++</option>
-        <option value="c">C</option>
-        <option value="csharp">C#</option>
-      </select>
-
-      {/* Difficulty Selector */}
-      <div className="flex gap-4 mb-6">
-        {["easy", "medium", "hard"].map((lvl) => (
-          <button
-            key={lvl}
-            onClick={() => setDifficulty(lvl)}
-            className={`px-6 py-2 rounded border transition ${
-              difficulty === lvl
-                ? "bg-indigo-600 border-indigo-500"
-                : "bg-white/10 border-white/20 hover:bg-white/20"
-            }`}
-          >
-            {lvl.toUpperCase()}
-          </button>
-        ))}
+    <div className="relative min-h-screen bg-[#020617] text-white px-4 sm:px-6 py-8">
+      {/* ===== Header ===== */}
+      <div className="max-w-5xl mx-auto mb-8">
+        <h1 className="text-3xl sm:text-4xl font-extrabold mb-2">
+          🧩 Practice Coding
+        </h1>
+        <p className="text-gray-400 text-sm sm:text-base">
+          Solve problems step-by-step and strengthen your fundamentals.
+        </p>
       </div>
 
-      {/* Questions List */}
-      <div className="space-y-3">
+      {/* ===== Controls ===== */}
+      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between mb-8">
+        {/* Language */}
+        <select
+          className="cursor-pointer bg-black/40 border border-white/10 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        >
+          <option value="javascript">JavaScript</option>
+          <option value="python">Python</option>
+          <option value="java">Java</option>
+          <option value="cpp">C++</option>
+          <option value="c">C</option>
+          <option value="csharp">C#</option>
+        </select>
+
+        {/* Difficulty */}
+        <div className="flex gap-3">
+          {["easy", "medium", "hard"].map((lvl) => (
+            <button
+              key={lvl}
+              onClick={() => setDifficulty(lvl)}
+              className={`cursor-pointer px-5 py-2 rounded-xl text-sm font-semibold border transition-all duration-200 ${
+                difficulty === lvl
+                  ? "bg-indigo-600 border-indigo-500 shadow-lg shadow-indigo-500/30"
+                  : "bg-white/5 border-white/10 hover:bg-white/15"
+              }`}
+            >
+              {lvl.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== Questions List ===== */}
+      <div className="max-w-5xl mx-auto space-y-3">
         {loading && (
-          <p className="text-gray-400 animate-pulse">Loading questions...</p>
+          <p className="text-gray-400 animate-pulse">
+            Loading questions...
+          </p>
         )}
 
         {!loading && questions.length === 0 && (
@@ -105,22 +114,33 @@ export default function Practice() {
               key={q._id}
               disabled={isLocked}
               onClick={() =>
-                navigate(`/practice/${difficulty}/${q.order}?language=${language}`)
+                navigate(
+                  `/practice/${difficulty}/${q.order}?language=${language}`,
+                )
               }
-              className={`block w-full text-left p-4 rounded transition
-                ${
-                  isLocked
-                    ? "bg-white/5 text-gray-500 cursor-not-allowed"
-                    : "bg-white/10 hover:bg-white/20"
-                }
-              `}
+              className={`group w-full text-left px-5 py-4 rounded-xl border transition-all duration-200 ${
+                isLocked
+                  ? "bg-white/5 border-white/10 text-gray-500 cursor-not-allowed"
+                  : "bg-white/5 border-white/10 hover:bg-white/15 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer"
+              }`}
             >
-              <span className="mr-2">
-                {isSolved && "✔"}
-                {isCurrent && "▶"}
-                {isLocked && "🔒"}
-              </span>
-              {q.order}. {q.title}
+              <div className="flex items-center gap-3">
+                <span className="text-lg">
+                  {isSolved && "✔"}
+                  {isCurrent && "▶"}
+                  {isLocked && "🔒"}
+                </span>
+
+                <span className="font-medium">
+                  {q.order}. {q.title}
+                </span>
+
+                {isCurrent && (
+                  <span className="ml-auto text-xs text-indigo-400">
+                    Current
+                  </span>
+                )}
+              </div>
             </button>
           );
         })}
