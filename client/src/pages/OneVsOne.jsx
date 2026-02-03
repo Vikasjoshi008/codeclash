@@ -50,7 +50,7 @@ const OneVsOne = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white">
+      <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white">
         Loading…
       </div>
     );
@@ -58,7 +58,7 @@ const OneVsOne = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white">
+      <div className="min-h-screen flex items-center justify-center bg-[#020617] text-white">
         Please login again
       </div>
     );
@@ -100,24 +100,31 @@ const OneVsOne = () => {
 
   /* ================= UI ================= */
   return (
-    <div className="min-h-screen w-full flex items-center justify-center px-4 bg-gradient-to-br from-[#020617] via-[#020617] to-[#020617] text-white overflow-x-hidden">
-      <div className="w-full max-w-sm rounded-2xl bg-white/5 backdrop-blur-md shadow-xl border border-white/10 p-6 animate-[fadeIn_0.3s_ease]">
+    <div className="relative min-h-screen w-full flex items-center justify-center px-4 bg-[#020617] text-white overflow-hidden">
+      {/* ===== Background Glow ===== */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
+      </div>
+
+      {/* ===== Card ===== */}
+      <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white/5 backdrop-blur-xl shadow-2xl border border-white/10 p-6 sm:p-7 transition-all duration-300">
 
         {/* TITLE */}
-        <h1 className="text-xl font-bold text-center mb-1">
+        <h1 className="text-2xl font-extrabold text-center mb-1 tracking-wide">
           ⚔️ 1v1 Code Battle
         </h1>
 
-        <p className="text-center text-xs text-gray-400 mb-4">
+        <p className="text-center text-xs text-gray-400 mb-5">
           👥 {playerCount} players online
         </p>
 
         {/* SELECTS */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full rounded-lg bg-[#020617] border border-white/10 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full cursor-pointer rounded-xl bg-black/40 border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           >
             <option value="python">Python</option>
             <option value="javascript">JavaScript</option>
@@ -130,7 +137,7 @@ const OneVsOne = () => {
           <select
             value={difficulty}
             onChange={(e) => setDifficulty(e.target.value)}
-            className="w-full rounded-lg bg-[#020617] border border-white/10 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full cursor-pointer rounded-xl bg-black/40 border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
           >
             <option value="easy">Easy</option>
             <option value="medium">Medium</option>
@@ -138,25 +145,25 @@ const OneVsOne = () => {
           </select>
         </div>
 
-        {/* BUTTONS */}
+        {/* BUTTON STATES */}
         {status === "IDLE" && (
           <button
             onClick={startMatch}
-            className="mt-5 w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition font-semibold text-sm"
+            className="mt-6 w-full cursor-pointer py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 font-semibold text-sm shadow-lg shadow-indigo-500/30 transition-all duration-200 active:scale-[0.98]"
           >
             Start 1v1
           </button>
         )}
 
         {status === "SEARCHING" && (
-          <div className="mt-5 text-center space-y-3">
+          <div className="mt-6 text-center space-y-4">
             <p className="text-yellow-400 animate-pulse text-sm">
               🔍 Searching for opponent…
             </p>
 
             <button
               onClick={cancelSearch}
-              className="w-full py-2 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 text-sm"
+              className="w-full cursor-pointer py-2.5 rounded-xl bg-red-500/15 text-red-400 border border-red-500/30 text-sm transition hover:bg-red-500/25"
             >
               Cancel Search
             </button>
@@ -164,14 +171,14 @@ const OneVsOne = () => {
         )}
 
         {noOpponent && (
-          <div className="mt-5 text-center space-y-3 animate-[fadeIn_0.2s_ease]">
+          <div className="mt-6 text-center space-y-4 animate-[fadeIn_0.25s_ease]">
             <p className="text-red-400 text-sm">
               😔 No opponents available right now
             </p>
 
             <button
               onClick={startMatch}
-              className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm"
+              className="w-full cursor-pointer py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-sm transition"
             >
               Try Again
             </button>
@@ -179,7 +186,7 @@ const OneVsOne = () => {
         )}
 
         {error && (
-          <p className="mt-3 text-center text-red-500 text-xs">
+          <p className="mt-4 text-center text-red-400 text-xs">
             {error}
           </p>
         )}
