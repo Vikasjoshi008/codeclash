@@ -15,8 +15,6 @@ router.get("/", async (req, res) => {
     }
 
     const questions = await problem.find({
-      // language: { $regex: `^${language}$`, $options: "i" },
-      // difficulty: { $regex: `^${difficulty}$`, $options: "i" },
        difficulty: difficulty.toLowerCase(),
     }).sort({ order: 1 });
 

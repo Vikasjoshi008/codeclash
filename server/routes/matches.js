@@ -2,10 +2,6 @@ const express = require("express");
 const Match = require("../models/Match");
 const router = express.Router();
 
-/**
- * GET /matches/:matchId
- * Used for refresh / reconnect
- */
 router.get("/:matchId", async (req, res) => {
   try {
     const { matchId } = req.params;
