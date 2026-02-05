@@ -23,6 +23,21 @@ export default function UserDashboard() {
       .catch((err) => console.error(err));
   }, []);
 
+  
+/* ---------- STAT CARD ---------- */
+function StatCard({ label, value, color = "text-white" }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-5 text-center transition hover:bg-white/10">
+      <div className={`text-3xl font-extrabold ${color}`}>
+        {value}
+      </div>
+      <div className="text-sm text-gray-400 mt-1">
+        {label}
+      </div>
+    </div>
+  );
+}
+
   const formatDateTime = (date) =>
     new Date(date).toLocaleString("en-US", {
       month: "short",
@@ -105,20 +120,6 @@ export default function UserDashboard() {
           ))}
         </div>
       </section>
-    </div>
-  );
-}
-
-/* ---------- STAT CARD ---------- */
-function StatCard({ label, value, color = "text-white" }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-5 text-center transition hover:bg-white/10">
-      <div className={`text-3xl font-extrabold ${color}`}>
-        {value}
-      </div>
-      <div className="text-sm text-gray-400 mt-1">
-        {label}
-      </div>
     </div>
   );
 }
