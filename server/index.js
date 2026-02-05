@@ -3,8 +3,8 @@ dotenv.config();
 
 const express = require("express");
 const cors = require("cors");
-const http = require("http");               // ✅ ADD
-const { Server } = require("socket.io");    // ✅ ADD
+const http = require("http");              
+const { Server } = require("socket.io");    
 
 const connectDB = require("./config/db.js");
 
@@ -32,7 +32,6 @@ app.use(
   })
 );
 
-// VERY IMPORTANT: allow preflight
 app.use(express.json());
 
 /* ---------- ROUTES ---------- */
@@ -52,11 +51,9 @@ app.get("/", (req, res) => {
 
 /* ---------- SOCKET SETUP ---------- */
 
-// ✅ CREATE HTTP SERVER
 const server = http.createServer(app);
 
 
-// ✅ ATTACH SOCKET.IO
 const io = new Server(server, {
     cors: {
         origin: process.env.FRONTEND_URL,
@@ -66,7 +63,6 @@ const io = new Server(server, {
     transports: ["websocket"] // 🔥 ADD THIS
 });
 
-// ✅ LOAD MATCHMAKING SOCKET LOGIC
 require("./socket/matchmaking.js")(io);
 
 /* ---------- START SERVER ---------- */
