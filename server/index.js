@@ -23,10 +23,33 @@ const port = process.env.PORT || 5000;
 /* ---------- MIDDLEWARE ---------- */
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://codeclash-three.vercel.app"],
+    origin: [
+      "http://localhost:5173",
+      "https://codeclash-three.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
-  }),
+  })
 );
+
+// VERY IMPORTANT
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://codeclash-three.vercel.app"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  next();
+});
+
 
 app.use(express.json());
 
@@ -50,11 +73,13 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://codeclash-three.vercel.app"],
+    origin: [
+      "http://localhost:5173", 
+      "https://codeclash-three.vercel.app"
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
-  transports: ["websocket"], // 🔥 ADD THIS
 });
 
 require("./socket/matchmaking.js")(io);
