@@ -71,7 +71,6 @@ module.exports = (io) => {
       console.log("User online:", userId);
       io.emit("playerCount", onlineUsers.size);
     });
-    io.emit("playerCount", onlinePlayers.size);
 
     /* ================= FIND MATCH ================= */
     socket.on("findMatch", async ({ userId, difficulty }) => {
