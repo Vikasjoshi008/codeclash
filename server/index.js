@@ -3,8 +3,8 @@ dotenv.config();
 
 const express = require("express");
 const cors = require("cors");
-const http = require("http");              
-const { Server } = require("socket.io");    
+const http = require("http");
+const { Server } = require("socket.io");
 
 const connectDB = require("./config/db.js");
 
@@ -15,7 +15,7 @@ const executeRoutes = require("./execution/execute.js");
 const historyRoutes = require("./routes/history.js");
 const onevsoneRoutes = require("./routes/OnevsOne.js");
 const problemRoutes = require("./routes/problem.js");
-const matchRoutes = require("./routes/matches.js"); 
+const matchRoutes = require("./routes/matches.js");
 
 const app = express();
 const port = 5000;
@@ -23,14 +23,11 @@ const port = 5000;
 /* ---------- MIDDLEWARE ---------- */
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://codeclash-three.vercel.app"
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: ["http://localhost:5173", "https://codeclash-three.vercel.app"],
     credentials: true,
-  })
+  }),
 );
+app.options("*", cors());
 
 app.use(express.json());
 
@@ -42,8 +39,7 @@ app.use("/api/history", historyRoutes);
 app.use("/api/execute", executeRoutes);
 app.use("/api/1v1", onevsoneRoutes);
 app.use("/api/problems", problemRoutes);
-app.use("/api/matches", matchRoutes)
-
+app.use("/api/matches", matchRoutes);
 
 app.get("/", (req, res) => {
   res.send("codeclash server is running");
@@ -53,14 +49,13 @@ app.get("/", (req, res) => {
 
 const server = http.createServer(app);
 
-
 const io = new Server(server, {
-    cors: {
-        origin: process.env.FRONTEND_URL,
-        methods: ["GET", "POST"],
-        credentials: true
-    },
-    transports: ["websocket"] // 🔥 ADD THIS
+  cors: {
+    origin: ["http://localhost:5173", "https://codeclash-three.vercel.app"],
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  transports: ["websocket"], // 🔥 ADD THIS
 });
 
 require("./socket/matchmaking.js")(io);

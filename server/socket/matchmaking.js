@@ -277,26 +277,6 @@ module.exports = (io) => {
     });
 
     /* ================= DISCONNECT ================= */
-    // socket.on("disconnect", async () => {
-    //   onlinePlayers.delete(socket.id);
-    //   io.emit("playerCount", onlinePlayers.size);
-
-    //   const match = await Match.findOne({
-    //     "players.socketId": socket.id,
-    //     state: { $in: ["SEARCHING", "MATCHED", "IN_PROGRESS"] },
-    //   });
-    //   if (!match) return;
-
-    //   match.state = "CANCELLED";
-    //   await match.save();
-
-    //   await Match.deleteOne({ _id: match._id });
-
-    //   io.to(match._id.toString()).emit(
-    //     "matchCancelled",
-    //     "Opponent disconnected",
-    //   );
-    // });
     socket.on("disconnect", async () => {
       for (let [userId, sId] of onlineUsers.entries()) {
         if (sId === socket.id) {
