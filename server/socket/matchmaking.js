@@ -4,7 +4,7 @@ const User = require("../models/User");
 const runJudge = require("../utils/piston");
 const calculateElo = require("../utils/elo");
 
-let onlinePlayers = new Set();
+let onlineUsers = new Map();
 
 /* ================= TIMER ================= */
 const startMatchTimer = async (matchId, io) => {
@@ -66,7 +66,11 @@ const emitSummaryAndElo = async (match, io) => {
 module.exports = (io) => {
   io.on("connection", (socket) => {
     console.log("🔥 SOCKET CONNECTED:", socket.id);
-    onlinePlayers.add(socket.id);
+    socket.on("registerUser", ({ userId }) => {
+      onlineUsers.set(userId, socket.id);
+      console.log("User online:", userId);
+      io.emit("playerCount", onlineUsers.size);
+    });
     io.emit("playerCount", onlinePlayers.size);
 
     /* ================= FIND MATCH ================= */
@@ -294,8 +298,14 @@ module.exports = (io) => {
     //   );
     // });
     socket.on("disconnect", async () => {
-      onlinePlayers.delete(socket.id);
-      io.emit("playerCount", onlinePlayers.size);
+      for (let [userId, sId] of onlineUsers.entries()) {
+        if (sId === socket.id) {
+          onlineUsers.delete(userId);
+          break;
+        }
+      }
+
+      io.emit("playerCount", onlineUsers.size);
 
       const match = await Match.findOne({
         "players.socketId": socket.id,

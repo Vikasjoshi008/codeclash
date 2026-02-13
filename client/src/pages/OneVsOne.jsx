@@ -16,6 +16,12 @@ const OneVsOne = () => {
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [playerCount, setPlayerCount] = useState(0);
 
+  useEffect(() => {
+    if (!user) return;
+
+    socket.emit("registerUser", { userId: user.id });
+  }, [user]);
+
   /* ================= SOCKET ================= */
   useEffect(() => {
     socket.on("playerCount", (count) => {
@@ -109,14 +115,13 @@ const OneVsOne = () => {
 
       {/* ===== Card ===== */}
       <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white/5 backdrop-blur-xl shadow-2xl border border-white/10 p-6 sm:p-7 transition-all duration-300">
-
         {/* TITLE */}
         <h1 className="text-2xl font-extrabold text-center mb-1 tracking-wide">
           ⚔️ 1v1 Code Battle
         </h1>
 
         <p className="text-center text-xs text-gray-400 mb-5">
-          👥 {playerCount} players online
+          👥 {Math.max(playerCount -1, 0)} players online
         </p>
 
         {/* SELECTS */}
@@ -186,9 +191,7 @@ const OneVsOne = () => {
         )}
 
         {error && (
-          <p className="mt-4 text-center text-red-400 text-xs">
-            {error}
-          </p>
+          <p className="mt-4 text-center text-red-400 text-xs">{error}</p>
         )}
       </div>
     </div>
