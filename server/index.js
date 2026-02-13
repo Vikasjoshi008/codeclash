@@ -18,7 +18,7 @@ const problemRoutes = require("./routes/problem.js");
 const matchRoutes = require("./routes/matches.js");
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 /* ---------- MIDDLEWARE ---------- */
 app.use(
