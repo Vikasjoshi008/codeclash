@@ -17,10 +17,10 @@ const OneVsOne = () => {
   const [playerCount, setPlayerCount] = useState(0);
 
   useEffect(() => {
-    if (!user) return;
-
-    socket.emit("registerUser", { userId: user.id });
-  }, [user]);
+    if (user?.id) {
+      socket.emit("registerUser", { userId: user.id });
+    }
+  }, [user?.id]);
 
   /* ================= SOCKET ================= */
   useEffect(() => {
@@ -121,7 +121,7 @@ const OneVsOne = () => {
         </h1>
 
         <p className="text-center text-xs text-gray-400 mb-5">
-          👥 {Math.max(playerCount -1, 0)} players online
+          👥 {Math.max(playerCount - 1, 0)} players online
         </p>
 
         {/* SELECTS */}

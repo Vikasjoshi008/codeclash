@@ -74,14 +74,9 @@ module.exports = (io) => {
 
     /* ================= FIND MATCH ================= */
     socket.on("findMatch", async ({ userId, difficulty }) => {
-      await Match.deleteMany({
-        "players.userId": userId,
-        state: "SEARCHING",
-      });
-
       const existing = await Match.findOne({
         "players.userId": userId,
-        state: "IN_PROGRESS",
+        state: { $in: ["SEARCHING", "MATCHED", "IN_PROGRESS"] },
       });
 
       if (existing) {
@@ -91,13 +86,22 @@ module.exports = (io) => {
 
       let match = await Match.findOne({
         state: "SEARCHING",
+        difficulty,
         "players.1": { $exists: false },
       });
+
+      const user = await User.findById(userId).select("username");
 
       if (!match) {
         match = await Match.create({
           difficulty,
-          players: [{ userId, socketId: socket.id, name: User.username }],
+          players: [
+            {
+              userId,
+              socketId: socket.id,
+              name: user.username,
+            },
+          ],
           state: "SEARCHING",
         });
 
@@ -105,13 +109,13 @@ module.exports = (io) => {
         socket.emit("searching");
         return;
       }
-      const user = await User.findById(userId).select("username");
 
       match.players.push({
         userId,
         socketId: socket.id,
         name: user.username,
       });
+
       match.state = "MATCHED";
       await match.save();
 
