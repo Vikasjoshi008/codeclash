@@ -76,6 +76,10 @@
 
 //     /* ================= FIND MATCH ================= */
 //     socket.on("findMatch", async ({ userId, difficulty }) => {
+        //   await Match.deleteMany({
+        //   "players.userId": userId,
+        //   state: { $in: ["SEARCHING", "MATCHED"] },
+        // });
 //       const existing = await Match.findOne({
 //         "players.userId": userId,
 //         state: "IN_PROGRESS",
