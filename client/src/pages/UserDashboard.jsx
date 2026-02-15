@@ -8,14 +8,16 @@ export default function UserDashboard() {
 
   /* FETCH PRACTICE */
   useEffect(() => {
-    api.get(`/history`)
+    api
+      .get(`/history`)
       .then((res) => setPracticeHistory(res.data))
       .catch(() => {});
   }, []);
 
   /* FETCH 1v1 STATS */
   const loadStats = () => {
-    api.get(`/1v1/history`)
+    api
+      .get(`/1v1/history`)
       .then((res) => setBattleStats(res.data))
       .catch(() => {});
   };
@@ -35,29 +37,33 @@ export default function UserDashboard() {
 
   const StatCard = ({ label, value, color = "text-white" }) => (
     <div className="rounded-xl bg-white/5 p-5 text-center">
-      <div className={`text-3xl font-bold ${color}`}>
-        {value ?? 0}
-      </div>
-      <div className="text-gray-400 text-sm mt-1">
-        {label}
-      </div>
+      <div className={`text-3xl font-bold ${color}`}>{value ?? 0}</div>
+      <div className="text-gray-400 text-sm mt-1">{label}</div>
     </div>
   );
 
   return (
     <div className="min-h-screen bg-[#020617] text-white px-6 py-8 space-y-10">
-
       {/* 1v1 STATS */}
       <section className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6">
-          ⚔️ 1v1 Battle Stats
-        </h2>
+        <h2 className="text-3xl font-bold mb-6">⚔️ 1v1 Battle Stats</h2>
+        <button onClick={() => navigate("/battle/1v1/history")}>
+          View Match History
+        </button>
 
         {battleStats ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatCard label="Matches" value={battleStats.totalMatches} />
-            <StatCard label="Wins" value={battleStats.wins} color="text-green-400" />
-            <StatCard label="Losses" value={battleStats.losses} color="text-red-400" />
+            <StatCard
+              label="Wins"
+              value={battleStats.wins}
+              color="text-green-400"
+            />
+            <StatCard
+              label="Losses"
+              value={battleStats.losses}
+              color="text-red-400"
+            />
             <StatCard label="Solved" value={battleStats.solved} />
           </div>
         ) : (
@@ -67,9 +73,7 @@ export default function UserDashboard() {
 
       {/* PRACTICE HISTORY */}
       <section className="max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6">
-          📘 Practice History
-        </h2>
+        <h2 className="text-3xl font-bold mb-6">📘 Practice History</h2>
 
         {practiceHistory.length === 0 ? (
           <p className="text-gray-400">No solved questions yet</p>

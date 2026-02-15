@@ -15,14 +15,29 @@ const OneVsOne = () => {
   const [noOpponent, setNoOpponent] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState(null);
   const [playerCount, setPlayerCount] = useState(0);
+  const [dots, setDots] = useState(".");
 
+  /* REGISTER USER */
   useEffect(() => {
     if (user?.id) {
       socket.emit("registerUser", { userId: user.id });
     }
   }, [user?.id]);
 
-  /* ================= SOCKET ================= */
+  /* DOTS ANIMATION */
+  useEffect(() => {
+    if (status !== "SEARCHING") return;
+
+    const interval = setInterval(() => {
+      setDots((prev) =>
+        prev.length >= 3 ? "." : prev + "."
+      );
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [status]);
+
+  /* SOCKET */
   useEffect(() => {
     socket.on("playerCount", (count) => {
       setPlayerCount(count);
@@ -31,7 +46,6 @@ const OneVsOne = () => {
     socket.on("matchFound", ({ matchId }) => {
       clearTimeout(searchTimeout);
       setStatus("MATCHED");
-      setNoOpponent(false);
       navigate(`/battle/1v1/match/${matchId}`);
     });
 
@@ -70,8 +84,7 @@ const OneVsOne = () => {
     );
   }
 
-  /* ================= ACTIONS ================= */
-
+  /* START MATCH */
   const startMatch = async () => {
     try {
       setError("");
@@ -89,7 +102,7 @@ const OneVsOne = () => {
       const timeout = setTimeout(() => {
         setStatus("IDLE");
         setNoOpponent(true);
-      }, 12000);
+      }, 15000);
 
       setSearchTimeout(timeout);
     } catch {
@@ -104,71 +117,78 @@ const OneVsOne = () => {
     setNoOpponent(false);
   };
 
-  /* ================= UI ================= */
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center px-4 bg-[#020617] text-white overflow-hidden">
-      {/* ===== Background Glow ===== */}
+    <div className="relative min-h-screen flex items-center justify-center bg-[#020617] text-white overflow-hidden px-4">
+
+      {/* Background Glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
       </div>
 
-      {/* ===== Card ===== */}
-      <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white/5 backdrop-blur-xl shadow-2xl border border-white/10 p-6 sm:p-7 transition-all duration-300">
-        {/* TITLE */}
-        <h1 className="text-2xl font-extrabold text-center mb-1 tracking-wide">
+      <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center shadow-2xl">
+
+        <h1 className="text-3xl font-extrabold mb-2">
           ⚔️ 1v1 Code Battle
         </h1>
 
-        <p className="text-center text-xs text-gray-400 mb-5">
+        <p className="text-gray-400 text-sm mb-6">
           👥 {Math.max(playerCount - 1, 0)} players online
         </p>
 
         {/* SELECTS */}
-        <div className="space-y-4">
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="w-full cursor-pointer rounded-xl bg-black/40 border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-          >
-            <option value="python">Python</option>
-            <option value="javascript">JavaScript</option>
-            <option value="java">Java</option>
-            <option value="cpp">C++</option>
-            <option value="csharp">C#</option>
-            <option value="typescript">Typescript</option>
-          </select>
-
-          <select
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-            className="w-full cursor-pointer rounded-xl bg-black/40 border border-white/10 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
-          >
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </div>
-
-        {/* BUTTON STATES */}
         {status === "IDLE" && (
-          <button
-            onClick={startMatch}
-            className="mt-6 w-full cursor-pointer py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 font-semibold text-sm shadow-lg shadow-indigo-500/30 transition-all duration-200 active:scale-[0.98]"
-          >
-            Start 1v1
-          </button>
+          <>
+            <div className="space-y-4 mb-6">
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3"
+              >
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+              </select>
+
+              <select
+                value={difficulty}
+                onChange={(e) => setDifficulty(e.target.value)}
+                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3"
+              >
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+
+            <button
+              onClick={startMatch}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 font-semibold transition"
+            >
+              Start 1v1
+            </button>
+          </>
         )}
 
+        {/* SEARCHING ANIMATION */}
         {status === "SEARCHING" && (
-          <div className="mt-6 text-center space-y-4">
-            <p className="text-yellow-400 animate-pulse text-sm">
-              🔍 Searching for opponent…
+          <div className="space-y-6">
+
+            <div className="relative w-24 h-24 mx-auto">
+              <div className="absolute inset-0 rounded-full bg-indigo-600 animate-ping opacity-30"></div>
+              <div className="relative w-24 h-24 rounded-full bg-indigo-500 flex items-center justify-center text-3xl font-bold">
+                ⚔️
+              </div>
+            </div>
+
+            <p className="text-yellow-400 text-lg">
+              Searching for opponent{dots}
             </p>
 
             <button
               onClick={cancelSearch}
-              className="w-full cursor-pointer py-2.5 rounded-xl bg-red-500/15 text-red-400 border border-red-500/30 text-sm transition hover:bg-red-500/25"
+              className="w-full py-2.5 rounded-xl bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 transition"
             >
               Cancel Search
             </button>
@@ -176,14 +196,14 @@ const OneVsOne = () => {
         )}
 
         {noOpponent && (
-          <div className="mt-6 text-center space-y-4 animate-[fadeIn_0.25s_ease]">
-            <p className="text-red-400 text-sm">
-              😔 No opponents available right now
+          <div className="mt-6 space-y-4">
+            <p className="text-red-400">
+              😔 No opponents available
             </p>
 
             <button
               onClick={startMatch}
-              className="w-full cursor-pointer py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-sm transition"
+              className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700"
             >
               Try Again
             </button>
@@ -191,7 +211,7 @@ const OneVsOne = () => {
         )}
 
         {error && (
-          <p className="mt-4 text-center text-red-400 text-xs">{error}</p>
+          <p className="mt-4 text-red-400 text-sm">{error}</p>
         )}
       </div>
     </div>

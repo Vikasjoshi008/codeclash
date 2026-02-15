@@ -12,6 +12,7 @@ import OneVsOne from "./pages/OneVsOne";
 import Question from "./pages/Question";
 import Navbar from "./components/Navbar";
 import UserDashboard from "./pages/UserDashboard";
+import MatchHistory from "./pages/matchHistory";
 import OneVsOneMatch from "./pages/OneVsOneMatch";
 
 function App() {
@@ -72,6 +73,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Question />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/battle/1v1/history"
+            element={
+              <PrivateRoute>
+                <MatchHistory />
               </PrivateRoute>
             }
           />
