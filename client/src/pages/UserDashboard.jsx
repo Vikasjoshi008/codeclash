@@ -1,124 +1,88 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import api from "../services/api";
+import socket from "../socket";
 
 export default function UserDashboard() {
-  const [practiceHistory, setPracticeHistory] = useState([]);
   const [battleStats, setBattleStats] = useState(null);
-  const navigate = useNavigate();
+  const [practiceHistory, setPracticeHistory] = useState([]);
 
-  /* ---------- PRACTICE HISTORY ---------- */
+  /* FETCH PRACTICE */
   useEffect(() => {
-    api
-      .get(`/history`)
+    api.get(`/history`)
       .then((res) => setPracticeHistory(res.data))
-      .catch((err) => console.error(err));
+      .catch(() => {});
   }, []);
 
-  /* ---------- 1v1 HISTORY ---------- */
-  useEffect(() => {
-    api
-      .get(`/1v1/history`)
+  /* FETCH 1v1 STATS */
+  const loadStats = () => {
+    api.get(`/1v1/history`)
       .then((res) => setBattleStats(res.data))
-      .catch((err) => console.error(err));
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    loadStats();
   }, []);
 
-  
-/* ---------- STAT CARD ---------- */
-function StatCard({ label, value, color = "text-white" }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-5 text-center transition hover:bg-white/10">
-      <div className={`text-3xl font-extrabold ${color}`}>
-        {value}
+  /* LIVE REFRESH */
+  useEffect(() => {
+    socket.on("statsRefresh", () => {
+      loadStats();
+    });
+
+    return () => socket.off("statsRefresh");
+  }, []);
+
+  const StatCard = ({ label, value, color = "text-white" }) => (
+    <div className="rounded-xl bg-white/5 p-5 text-center">
+      <div className={`text-3xl font-bold ${color}`}>
+        {value ?? 0}
       </div>
-      <div className="text-sm text-gray-400 mt-1">
+      <div className="text-gray-400 text-sm mt-1">
         {label}
       </div>
     </div>
   );
-}
-
-  const formatDateTime = (date) =>
-    new Date(date).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white px-4 sm:px-6 py-8 space-y-12">
+    <div className="min-h-screen bg-[#020617] text-white px-6 py-8 space-y-10">
 
-      {/* ================= 1v1 STATS ================= */}
+      {/* 1v1 STATS */}
       <section className="max-w-6xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl font-extrabold mb-6">
+        <h2 className="text-3xl font-bold mb-6">
           ⚔️ 1v1 Battle Stats
         </h2>
 
-        {!battleStats && (
-          <p className="text-gray-400">No 1v1 battles played yet</p>
-        )}
-
-        {battleStats && (
+        {battleStats ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <StatCard label="Matches" value={battleStats.totalMatches} />
-            <StatCard
-              label="Wins"
-              value={battleStats.wins}
-              color="text-green-400"
-            />
-            <StatCard
-              label="Losses"
-              value={battleStats.losses}
-              color="text-red-400"
-            />
+            <StatCard label="Wins" value={battleStats.wins} color="text-green-400" />
+            <StatCard label="Losses" value={battleStats.losses} color="text-red-400" />
             <StatCard label="Solved" value={battleStats.solved} />
           </div>
+        ) : (
+          <p className="text-gray-400">No 1v1 matches yet</p>
         )}
       </section>
 
-      {/* ================= PRACTICE HISTORY ================= */}
+      {/* PRACTICE HISTORY */}
       <section className="max-w-6xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-extrabold mb-6">
+        <h2 className="text-3xl font-bold mb-6">
           📘 Practice History
-        </h1>
+        </h2>
 
-        {practiceHistory.length === 0 && (
+        {practiceHistory.length === 0 ? (
           <p className="text-gray-400">No solved questions yet</p>
-        )}
-
-        <div className="grid gap-4">
-          {practiceHistory.map((h) => (
-            <div
-              key={h._id}
-              onClick={() =>
-                navigate(
-                  `/practice/${h.difficulty}/${h.order}?language=${h.language}`
-                )
-              }
-              className="group cursor-pointer rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-5 transition-all duration-200 hover:bg-white/15 hover:shadow-lg hover:shadow-indigo-500/10"
-            >
-              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mb-1">
-                <span className="uppercase tracking-wide">
-                  {h.language}
-                </span>
-                <span>•</span>
-                <span className="uppercase tracking-wide">
-                  {h.difficulty}
-                </span>
-              </div>
-
-              <div className="font-semibold text-lg group-hover:text-indigo-400 transition">
-                {h.title}
-              </div>
-
-              <div className="text-xs text-gray-400 mt-2">
-                Solved at {formatDateTime(h.createdAt)}
+        ) : (
+          practiceHistory.map((h) => (
+            <div key={h._id} className="bg-white/5 p-4 rounded-xl mb-3">
+              <div className="font-semibold">{h.title}</div>
+              <div className="text-sm text-gray-400">
+                {h.difficulty} • {h.language}
               </div>
             </div>
-          ))}
-        </div>
+          ))
+        )}
       </section>
     </div>
   );
