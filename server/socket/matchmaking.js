@@ -66,6 +66,7 @@ module.exports = (io) => {
     /* REGISTER */
     socket.on("registerUser", ({ userId }) => {
       onlineUsers.set(userId, socket.id);
+      io.emit("playerCount", onlineUsers.size);
     });
 
     /* FIND MATCH */
@@ -128,7 +129,7 @@ module.exports = (io) => {
 
       if (match.players.every((p) => p.ready)) {
         match.state = "IN_PROGRESS";
-        match.startedAt = Date.now();
+        match.startedAt = new Date();
 
         const problem = await Problem.aggregate([
           { $match: { difficulty: match.difficulty } },
@@ -234,6 +235,8 @@ module.exports = (io) => {
           break;
         }
       }
+
+      io.emit("playerCount", onlineUsers.size);
 
       if (!userId) return;
 

@@ -41,7 +41,8 @@ const OneVsOneMatch = () => {
   useEffect(() => {
     if (!matchId) return;
 
-    api.get(`/api/matches/${matchId}`)
+    api
+      .get(`/api/matches/${matchId}`)
       .then((res) => setPlayers(res.data.players || []))
       .catch(() => {});
   }, [matchId]);
@@ -65,14 +66,16 @@ const OneVsOneMatch = () => {
     });
 
     socket.on("matchStarted", ({ startedAt, duration }) => {
-      const start = Number(startedAt);
-      const dur = Number(duration);
-
       clearInterval(timerRef.current);
 
+      const startTime = new Date(startedAt).getTime();
+      const totalDuration = Number(duration) || 15 * 60 * 1000;
+
+      if (!startTime || isNaN(startTime)) return;
+
       timerRef.current = setInterval(() => {
-        const elapsed = Date.now() - start;
-        const remaining = dur - elapsed;
+        const elapsed = Date.now() - startTime;
+        const remaining = totalDuration - elapsed;
         setTimeLeft(Math.max(0, remaining));
       }, 1000);
     });
@@ -141,7 +144,6 @@ const OneVsOneMatch = () => {
   return (
     <div className="min-h-screen bg-[#020617] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 h-[85vh]">
-
         {/* LEFT SIDE */}
         <div className="rounded-2xl bg-white/5 p-6 flex flex-col">
           {!problem ? (
@@ -162,7 +164,10 @@ const OneVsOneMatch = () => {
               {state === "IN_PROGRESS" && (
                 <p className="text-yellow-400 text-center mb-3">
                   ⏱ {Math.floor(timeLeft / 60000)}:
-                  {String(Math.floor((timeLeft % 60000) / 1000)).padStart(2, "0")}
+                  {String(Math.floor((timeLeft % 60000) / 1000)).padStart(
+                    2,
+                    "0",
+                  )}
                 </p>
               )}
 
@@ -200,9 +205,7 @@ const OneVsOneMatch = () => {
           </button>
 
           {opponentSubmitted && !result && (
-            <p className="text-blue-400 text-center mt-2">
-              Opponent submitted
-            </p>
+            <p className="text-blue-400 text-center mt-2">Opponent submitted</p>
           )}
 
           {result && (
