@@ -7,11 +7,18 @@ const playerSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
+    username: {   // ✅ ADD THIS
+      type: String,
+      required: true,
+    },
+
     socketId: String,
     ready: { type: Boolean, default: false },
 
     code: String,
     submittedAt: Date,
+
     passedTestCases: { type: Number, default: 0 },
     totalTestCases: { type: Number, default: 0 },
     timeTaken: Number,
@@ -36,14 +43,27 @@ const matchSchema = new mongoose.Schema(
 
     state: {
       type: String,
-      enum: ["SEARCHING", "MATCHED", "IN_PROGRESS", "FINISHED", "CANCELLED"],
+      enum: [
+        "SEARCHING",
+        "MATCHED",
+        "IN_PROGRESS",
+        "FINISHED",
+        "CANCELLED",
+      ],
       default: "SEARCHING",
     },
 
-    startedAt: Date,
+    startedAt: Date, // keep as Date
+    endedAt: Date,   // ✅ ADD THIS
+
     duration: { type: Number, default: 15 * 60 * 1000 },
 
     winner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    loser: {   // ✅ ADD THIS
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
@@ -52,4 +72,3 @@ const matchSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Match", matchSchema);
-
