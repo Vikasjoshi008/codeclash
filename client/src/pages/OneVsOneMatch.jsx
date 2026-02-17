@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate} from "react-router-dom";
 import socket from "../socket";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -7,6 +7,7 @@ import Editor from "@monaco-editor/react";
 
 const OneVsOneMatch = () => {
   const { matchId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [state, setState] = useState("MATCHED");
@@ -36,7 +37,6 @@ const OneVsOneMatch = () => {
       matchId,
       userId: user.id,
     });
-
   }, [user, matchId]);
 
   /* ================= FETCH PLAYERS ================= */
@@ -44,7 +44,7 @@ const OneVsOneMatch = () => {
     if (!matchId) return;
 
     api
-      .get(`/api/matches/${matchId}`)
+      .get(`/matches/${matchId}`)
       .then((res) => setPlayers(res.data.players || []))
       .catch(() => {});
   }, [matchId]);
@@ -136,8 +136,7 @@ const OneVsOneMatch = () => {
 
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    return () =>
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [state, result]);
 
   /* ================= ACTIONS ================= */
@@ -148,6 +147,11 @@ const OneVsOneMatch = () => {
 
   const submitCode = () => {
     if (submitted || state !== "IN_PROGRESS") return;
+
+    if (!code || !code.trim()) {
+      alert("You did not write any code.");
+      return;
+    }
 
     setSubmitted(true);
     clearInterval(timerRef.current);
@@ -165,10 +169,8 @@ const OneVsOneMatch = () => {
   return (
     <div className="min-h-screen bg-[#020617] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 h-[85vh]">
-
         {/* LEFT SIDE */}
         <div className="rounded-2xl bg-white/5 p-6 flex flex-col">
-
           {!problem ? (
             <div className="flex-1 flex flex-col items-center justify-center">
               {!ready ? (
@@ -189,7 +191,7 @@ const OneVsOneMatch = () => {
                   ⏱ {Math.floor(timeLeft / 60000)}:
                   {String(Math.floor((timeLeft % 60000) / 1000)).padStart(
                     2,
-                    "0"
+                    "0",
                   )}
                 </p>
               )}
@@ -210,7 +212,6 @@ const OneVsOneMatch = () => {
 
         {/* RIGHT SIDE */}
         <div className="rounded-2xl bg-white/5 p-4 flex flex-col">
-
           <Editor
             theme="vs-dark"
             height="100%"
@@ -229,9 +230,7 @@ const OneVsOneMatch = () => {
           </button>
 
           {opponentSubmitted && !result && (
-            <p className="text-blue-400 text-center mt-2">
-              Opponent submitted
-            </p>
+            <p className="text-blue-400 text-center mt-2">Opponent submitted</p>
           )}
 
           {result && (
@@ -240,26 +239,32 @@ const OneVsOneMatch = () => {
             </p>
           )}
 
+          {result && (
+            <button
+              onClick={() => navigate("/battle/1v1")}
+              className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-xl"
+            >
+              Leave Match
+            </button>
+          )}
+
           {/* AI ANALYSIS */}
           {aiResult && (
             <div className="mt-6 bg-purple-900/30 p-4 rounded-xl">
               <h3 className="font-bold mb-2">🤖 AI Match Analysis</h3>
 
-              <p className="mb-4 whitespace-pre-line">
-                {aiResult.commentary}
-              </p>
+              <p className="mb-4 whitespace-pre-line">{aiResult.commentary}</p>
 
               {aiResult.players?.map((p) => (
                 <div key={p.userId} className="mb-2 text-sm">
                   <p>
-                    {p.userId === user.id ? "You" : "Opponent"} —{" "}
-                    {p.passed}/{p.total} test cases in {p.timeTaken}s
+                    {p.userId === user.id ? "You" : "Opponent"} — {p.passed}/
+                    {p.total} test cases in {p.timeTaken}s
                   </p>
                 </div>
               ))}
             </div>
           )}
-
         </div>
       </div>
     </div>
