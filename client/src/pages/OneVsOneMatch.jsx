@@ -22,19 +22,21 @@ const OneVsOneMatch = () => {
   const [result, setResult] = useState(null);
 
   const [timeLeft, setTimeLeft] = useState(0);
+  const [aiResult, setAiResult] = useState(null);
+
   const timerRef = useRef(null);
-  const editorRef = useRef(null);
 
   /* ================= JOIN MATCH ================= */
   useEffect(() => {
     if (!user || !matchId) return;
+
+    socket.emit("registerUser", { userId: user.id });
 
     socket.emit("joinMatch", {
       matchId,
       userId: user.id,
     });
 
-    socket.emit("registerUser", { userId: user.id });
   }, [user, matchId]);
 
   /* ================= FETCH PLAYERS ================= */
@@ -51,21 +53,21 @@ const OneVsOneMatch = () => {
   useEffect(() => {
     if (!user) return;
 
-    socket.on("matchFound", ({ players }) => {
+    const handleMatchFound = ({ players }) => {
       setPlayers(players);
-    });
+    };
 
-    socket.on("matchUpdate", ({ state }) => {
+    const handleMatchUpdate = ({ state }) => {
       setState(state);
-    });
+    };
 
-    socket.on("problemAssigned", async ({ problemId }) => {
+    const handleProblemAssigned = async ({ problemId }) => {
       const res = await api.get(`/problems/${problemId}`);
       setProblem(res.data);
       setCode(res.data.starterCode?.[language] || "");
-    });
+    };
 
-    socket.on("matchStarted", ({ startedAt, duration }) => {
+    const handleMatchStarted = ({ startedAt, duration }) => {
       clearInterval(timerRef.current);
 
       const startTime = new Date(startedAt).getTime();
@@ -78,33 +80,50 @@ const OneVsOneMatch = () => {
         const remaining = totalDuration - elapsed;
         setTimeLeft(Math.max(0, remaining));
       }, 1000);
-    });
+    };
 
-    socket.on("submissionUpdate", ({ userId }) => {
-      if (userId !== user.id) setOpponentSubmitted(true);
-    });
+    const handleSubmissionUpdate = ({ userId }) => {
+      if (userId !== user.id) {
+        setOpponentSubmitted(true);
+      }
+    };
 
-    socket.on("opponentLeft", () => {
+    const handleOpponentLeft = () => {
       clearInterval(timerRef.current);
       setResult("WIN");
-    });
+    };
 
-    socket.on("matchResult", ({ winner }) => {
+    const handleMatchResult = ({ winner }) => {
       clearInterval(timerRef.current);
       setResult(winner === user.id ? "WIN" : "LOSE");
-    });
+    };
+
+    const handleAIResult = (data) => {
+      setAiResult(data);
+    };
+
+    socket.on("matchFound", handleMatchFound);
+    socket.on("matchUpdate", handleMatchUpdate);
+    socket.on("problemAssigned", handleProblemAssigned);
+    socket.on("matchStarted", handleMatchStarted);
+    socket.on("submissionUpdate", handleSubmissionUpdate);
+    socket.on("opponentLeft", handleOpponentLeft);
+    socket.on("matchResult", handleMatchResult);
+    socket.on("aiResult", handleAIResult);
 
     return () => {
-      socket.off("matchFound");
-      socket.off("matchUpdate");
-      socket.off("problemAssigned");
-      socket.off("matchStarted");
-      socket.off("submissionUpdate");
-      socket.off("opponentLeft");
-      socket.off("matchResult");
+      socket.off("matchFound", handleMatchFound);
+      socket.off("matchUpdate", handleMatchUpdate);
+      socket.off("problemAssigned", handleProblemAssigned);
+      socket.off("matchStarted", handleMatchStarted);
+      socket.off("submissionUpdate", handleSubmissionUpdate);
+      socket.off("opponentLeft", handleOpponentLeft);
+      socket.off("matchResult", handleMatchResult);
+      socket.off("aiResult", handleAIResult);
+
       clearInterval(timerRef.current);
     };
-  }, [user]);
+  }, [user, language]);
 
   /* ================= EXIT CONFIRM ================= */
   useEffect(() => {
@@ -116,7 +135,9 @@ const OneVsOneMatch = () => {
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+
+    return () =>
+      window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [state, result]);
 
   /* ================= ACTIONS ================= */
@@ -144,8 +165,10 @@ const OneVsOneMatch = () => {
   return (
     <div className="min-h-screen bg-[#020617] text-white px-4 py-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 h-[85vh]">
+
         {/* LEFT SIDE */}
         <div className="rounded-2xl bg-white/5 p-6 flex flex-col">
+
           {!problem ? (
             <div className="flex-1 flex flex-col items-center justify-center">
               {!ready ? (
@@ -166,7 +189,7 @@ const OneVsOneMatch = () => {
                   ⏱ {Math.floor(timeLeft / 60000)}:
                   {String(Math.floor((timeLeft % 60000) / 1000)).padStart(
                     2,
-                    "0",
+                    "0"
                   )}
                 </p>
               )}
@@ -187,6 +210,7 @@ const OneVsOneMatch = () => {
 
         {/* RIGHT SIDE */}
         <div className="rounded-2xl bg-white/5 p-4 flex flex-col">
+
           <Editor
             theme="vs-dark"
             height="100%"
@@ -205,7 +229,9 @@ const OneVsOneMatch = () => {
           </button>
 
           {opponentSubmitted && !result && (
-            <p className="text-blue-400 text-center mt-2">Opponent submitted</p>
+            <p className="text-blue-400 text-center mt-2">
+              Opponent submitted
+            </p>
           )}
 
           {result && (
@@ -213,6 +239,27 @@ const OneVsOneMatch = () => {
               {result === "WIN" ? "🎉 You Won!" : "😢 You Lost"}
             </p>
           )}
+
+          {/* AI ANALYSIS */}
+          {aiResult && (
+            <div className="mt-6 bg-purple-900/30 p-4 rounded-xl">
+              <h3 className="font-bold mb-2">🤖 AI Match Analysis</h3>
+
+              <p className="mb-4 whitespace-pre-line">
+                {aiResult.commentary}
+              </p>
+
+              {aiResult.players?.map((p) => (
+                <div key={p.userId} className="mb-2 text-sm">
+                  <p>
+                    {p.userId === user.id ? "You" : "Opponent"} —{" "}
+                    {p.passed}/{p.total} test cases in {p.timeTaken}s
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
         </div>
       </div>
     </div>

@@ -3,16 +3,37 @@ const Problem = require("../models/Problem");
 const User = require("../models/User");
 const runJudge = require("../utils/piston");
 const calculateElo = require("../utils/elo");
+const analyzeWithAI = require("../utils/aiAnalyzer");
 
 let onlineUsers = new Map();
+
+/* ================= SAFE ELO ================= */
+const updateElo = async (match) => {
+  if (!match.winner || !match.loser) return;
+
+  const winnerUser = await User.findById(match.winner);
+  const loserUser = await User.findById(match.loser);
+
+  if (!winnerUser || !loserUser) return;
+
+  const { winnerNew, loserNew } = calculateElo(winnerUser.elo, loserUser.elo);
+
+  winnerUser.elo = winnerNew;
+  loserUser.elo = loserNew;
+
+  await winnerUser.save();
+  await loserUser.save();
+};
 
 /* ================= FORFEIT ================= */
 const handleForfeit = async (match, leavingUserId, io) => {
   if (!match || match.state !== "IN_PROGRESS") return;
 
   const opponent = match.players.find(
-    (p) => p.userId.toString() !== leavingUserId.toString()
+    (p) => p.userId.toString() !== leavingUserId.toString(),
   );
+
+  if (!opponent) return;
 
   match.state = "FINISHED";
   match.winner = opponent.userId;
@@ -27,51 +48,36 @@ const handleForfeit = async (match, leavingUserId, io) => {
   });
 
   await updateElo(match);
-  await emitStatsRefresh(match, io);
-};
-
-/* ================= ELO ================= */
-const updateElo = async (match) => {
-  const winnerUser = await User.findById(match.winner);
-  const loserUser = await User.findById(match.loser);
-
-  const { winnerNew, loserNew } = calculateElo(
-    winnerUser.elo,
-    loserUser.elo
-  );
-
-  winnerUser.elo = winnerNew;
-  loserUser.elo = loserNew;
-
-  await winnerUser.save();
-  await loserUser.save();
-};
-
-/* ================= STATS REFRESH ================= */
-const emitStatsRefresh = async (match, io) => {
-  const sockets = [
-    onlineUsers.get(match.winner?.toString()),
-    onlineUsers.get(match.loser?.toString()),
-  ];
-
-  sockets.forEach((s) => {
-    if (s) io.to(s).emit("statsRefresh");
-  });
 };
 
 /* ================= MODULE ================= */
 module.exports = (io) => {
   io.on("connection", (socket) => {
-
-    /* REGISTER */
+    /* REGISTER USER */
     socket.on("registerUser", ({ userId }) => {
-      onlineUsers.set(userId, socket.id);
+      if (!userId) return;
+
+      onlineUsers.set(userId.toString(), socket.id);
       io.emit("playerCount", onlineUsers.size);
     });
 
     /* FIND MATCH */
     socket.on("findMatch", async ({ userId, difficulty }) => {
+      if (!userId || !difficulty) return;
+
+      // Prevent user joining multiple matches
+      const existingMatch = await Match.findOne({
+        "players.userId": userId,
+        state: { $in: ["SEARCHING", "MATCHED", "IN_PROGRESS"] },
+      });
+
+      if (existingMatch) {
+        socket.emit("matchError", "Already in a match");
+        return;
+      }
+
       const user = await User.findById(userId);
+      if (!user) return;
 
       let match = await Match.findOne({
         state: "SEARCHING",
@@ -94,7 +100,8 @@ module.exports = (io) => {
         });
 
         socket.join(match._id.toString());
-        return socket.emit("searching");
+        socket.emit("searching");
+        return;
       }
 
       match.players.push({
@@ -115,119 +122,150 @@ module.exports = (io) => {
       });
     });
 
-    /* READY */
+    /* PLAYER READY */
     socket.on("playerReady", async ({ matchId, userId }) => {
       const match = await Match.findById(matchId);
-      if (!match) return;
+      if (!match || match.state !== "MATCHED") return;
 
-      const player = match.players.find(
-        (p) => p.userId.toString() === userId
-      );
+      const player = match.players.find((p) => p.userId.toString() === userId);
+
+      if (!player) return;
 
       player.ready = true;
       await match.save();
 
-      if (match.players.every((p) => p.ready)) {
-        match.state = "IN_PROGRESS";
-        match.startedAt = new Date();
-
+      if (match.players.length === 2 && match.players.every((p) => p.ready)) {
         const problem = await Problem.aggregate([
           { $match: { difficulty: match.difficulty } },
           { $sample: { size: 1 } },
         ]);
 
+        if (!problem.length) {
+          match.state = "CANCELLED";
+          await match.save();
+          io.to(matchId).emit("matchCancelled");
+          return;
+        }
+
+        match.state = "IN_PROGRESS";
+        match.startedAt = new Date();
         match.problemId = problem[0]._id;
         await match.save();
-
-        io.to(matchId).emit("matchUpdate", {
-          state: "IN_PROGRESS",
-        });
-
-        io.to(matchId).emit("problemAssigned", {
-          problemId: problem[0]._id,
-        });
 
         io.to(matchId).emit("matchStarted", {
           startedAt: match.startedAt,
           duration: match.duration,
         });
+
+        io.to(matchId).emit("problemAssigned", {
+          problemId: problem[0]._id,
+        });
       }
     });
 
-    /* SUBMIT */
+    /* SUBMIT CODE */
     socket.on("submitCode", async ({ matchId, userId, code, language }) => {
       const match = await Match.findById(matchId).populate("problemId");
       if (!match || match.state !== "IN_PROGRESS") return;
 
-      const player = match.players.find(
-        (p) => p.userId.toString() === userId
-      );
+      const player = match.players.find((p) => p.userId.toString() === userId);
 
       if (!player || player.code) return;
 
       player.timeTaken = Math.floor(
-        (Date.now() - match.startedAt) / 1000
+        (Date.now() - new Date(match.startedAt).getTime()) / 1000,
       );
 
-      if (!code.trim()) {
+      const testCases = match.problemId?.testCases || [];
+
+      if (!code || !code.trim()) {
         player.passedTestCases = 0;
-        player.totalTestCases = match.problemId.testCases.length;
+        player.totalTestCases = testCases.length;
       } else {
-        const result = await runJudge({
-          code,
-          language,
-          testCases: match.problemId.testCases,
-        });
+        try {
+          const result = await runJudge({
+            code,
+            language,
+            testCases,
+          });
 
-        player.passedTestCases = result.passed;
-        player.totalTestCases = result.total;
-
-        const improvements = [];
-        if (code.length > 400)
-          improvements.push("Try reducing code length.");
-        player.improvements = improvements;
+          player.passedTestCases = result?.passed || 0;
+          player.totalTestCases = result?.total || testCases.length;
+        } catch {
+          player.passedTestCases = 0;
+          player.totalTestCases = testCases.length;
+        }
       }
 
       player.code = code;
       player.submittedAt = new Date();
       await match.save();
 
-      io.to(matchId).emit("submissionUpdate", {
-        userId,
-      });
+      io.to(matchId).emit("submissionUpdate", { userId });
 
       if (!match.players.every((p) => p.code)) return;
 
       const [p1, p2] = match.players;
 
-      let winner =
-        p1.passedTestCases !== p2.passedTestCases
-          ? p1.passedTestCases > p2.passedTestCases
-            ? p1.userId
-            : p2.userId
-          : p1.timeTaken <= p2.timeTaken
-          ? p1.userId
-          : p2.userId;
+      const p1Correct = p1.passedTestCases === p1.totalTestCases;
+      const p2Correct = p2.passedTestCases === p2.totalTestCases;
+
+      let winner;
+
+      if (p1Correct && !p2Correct) winner = p1.userId;
+      else if (!p1Correct && p2Correct) winner = p2.userId;
+      else if (p1Correct && p2Correct)
+        winner = p1.timeTaken <= p2.timeTaken ? p1.userId : p2.userId;
+      else {
+        if (p1.passedTestCases !== p2.passedTestCases)
+          winner =
+            p1.passedTestCases > p2.passedTestCases ? p1.userId : p2.userId;
+        else winner = p1.timeTaken <= p2.timeTaken ? p1.userId : p2.userId;
+      }
 
       match.state = "FINISHED";
       match.winner = winner;
       match.loser =
-        winner.toString() === p1.userId.toString()
-          ? p2.userId
-          : p1.userId;
+        winner.toString() === p1.userId.toString() ? p2.userId : p1.userId;
       match.endedAt = new Date();
 
       await match.save();
 
       io.to(matchId).emit("matchResult", { winner });
 
+      const winnerName =
+        p1.userId.toString() === winner.toString() ? p1.username : p2.username;
+
+      // Non-blocking AI call
+      analyzeWithAI(p1, p2, winnerName)
+        .then((aiCommentary) => {
+          io.to(matchId).emit("aiResult", {
+            commentary: aiCommentary,
+            players: [
+              {
+                userId: p1.userId,
+                passed: p1.passedTestCases,
+                total: p1.totalTestCases,
+                timeTaken: p1.timeTaken,
+              },
+              {
+                userId: p2.userId,
+                passed: p2.passedTestCases,
+                total: p2.totalTestCases,
+                timeTaken: p2.timeTaken,
+              },
+            ],
+          });
+        })
+        .catch(() => {});
+
       await updateElo(match);
-      await emitStatsRefresh(match, io);
     });
 
     /* DISCONNECT */
     socket.on("disconnect", async () => {
       let userId;
+
       for (let [id, s] of onlineUsers.entries()) {
         if (s === socket.id) {
           userId = id;
