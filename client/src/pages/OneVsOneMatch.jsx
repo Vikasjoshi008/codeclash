@@ -181,7 +181,7 @@ const OneVsOneMatch = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 h-[85vh]">
         {/* LEFT SIDE */}
         <div className="rounded-2xl bg-white/5 p-6 flex flex-col">
-          {state !== "IN_PROGRESS" ? (
+          {!problem ? (
             <div className="flex-1 flex flex-col items-center justify-center">
               {!ready ? (
                 <button
