@@ -147,6 +147,11 @@ module.exports = (io) => {
       const player = match.players.find((p) => p.userId.toString() === userId);
 
       if (!player) return;
+      console.log("Match state:", match.state);
+      console.log(
+        "Ready states:",
+        match.players.map((p) => p.ready),
+      );
 
       player.ready = true;
       await match.save();
