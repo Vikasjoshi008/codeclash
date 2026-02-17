@@ -39,8 +39,7 @@ app.use(
 app.use((req, res, next) => {
   res.header(
     "Access-Control-Allow-Origin",
-    "http://localhost:5173/, https://codeclash-three.vercel.app"
-    // "https://codeclash-three.vercel.app"
+    "https://codeclash-three.vercel.app"
   );
   res.header(
     "Access-Control-Allow-Headers",
