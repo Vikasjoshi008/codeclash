@@ -139,6 +139,10 @@ module.exports = (io) => {
       });
     });
 
+    socket.on("joinMatch", ({ matchId }) => {
+      socket.join(matchId);
+    });
+
     /* PLAYER READY */
     socket.on("playerReady", async ({ matchId, userId }) => {
       const match = await Match.findById(matchId);

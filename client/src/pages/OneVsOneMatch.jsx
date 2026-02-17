@@ -69,6 +69,7 @@ const OneVsOneMatch = () => {
 
     const handleMatchStarted = ({ startedAt, duration }) => {
       clearInterval(timerRef.current);
+      setState("IN_PROGRESS");
 
       const startTime = new Date(startedAt).getTime();
       const totalDuration = Number(duration) || 15 * 60 * 1000;
