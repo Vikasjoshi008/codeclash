@@ -54,10 +54,18 @@ const handleForfeit = async (match, leavingUserId, io) => {
 module.exports = (io) => {
   io.on("connection", (socket) => {
     /* REGISTER USER */
-    socket.on("registerUser", ({ userId }) => {
+    socket.on("registerUser", async ({ userId }) => {
       if (!userId) return;
 
       onlineUsers.set(userId.toString(), socket.id);
+
+      await Match.updateMany(
+        {
+          "players.userId": userId,
+          state: { $in: ["SEARCHING", "MATCHED"] },
+        },
+        { $set: { state: "CANCELLED" } },
+      );
       io.emit("playerCount", onlineUsers.size);
     });
 
@@ -65,13 +73,22 @@ module.exports = (io) => {
     socket.on("findMatch", async ({ userId, difficulty }) => {
       if (!userId || !difficulty) return;
 
+      // Clean stale matches
+      await Match.updateMany(
+        {
+          "players.userId": userId,
+          state: { $in: ["SEARCHING", "MATCHED"] },
+        },
+        { $set: { state: "CANCELLED" } },
+      );
+
       // Prevent user joining multiple matches
-      const existingMatch = await Match.findOne({
+      const activeMatch = await Match.findOne({
         "players.userId": userId,
-        state: { $in: ["SEARCHING", "MATCHED", "IN_PROGRESS"] },
+        state: "IN_PROGRESS",
       });
 
-      if (existingMatch) {
+      if (activeMatch) {
         socket.emit("matchError", "Already in a match");
         return;
       }
@@ -284,6 +301,18 @@ module.exports = (io) => {
       });
 
       if (match) await handleForfeit(match, userId, io);
+    });
+
+    socket.on("leaveMatch", async ({ matchId, userId }) => {
+      const match = await Match.findById(matchId);
+      if (!match) return;
+
+      if (match.state === "IN_PROGRESS") {
+        await handleForfeit(match, userId, io);
+      } else {
+        match.state = "CANCELLED";
+        await match.save();
+      }
     });
   });
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate} from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import socket from "../socket";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
@@ -125,6 +125,15 @@ const OneVsOneMatch = () => {
     };
   }, [user, language]);
 
+  const leaveMatch = () => {
+    socket.emit("leaveMatch", {
+      matchId,
+      userId: user.id,
+    });
+
+    navigate("/battle/1v1");
+  };
+
   /* ================= EXIT CONFIRM ================= */
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -241,7 +250,7 @@ const OneVsOneMatch = () => {
 
           {result && (
             <button
-              onClick={() => navigate("/battle/1v1")}
+              onClick={leaveMatch}
               className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-xl"
             >
               Leave Match
