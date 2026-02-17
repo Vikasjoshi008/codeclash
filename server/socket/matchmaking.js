@@ -139,10 +139,6 @@ module.exports = (io) => {
       });
     });
 
-    socket.on("joinMatch", ({ matchId }) => {
-      socket.join(matchId);
-    });
-
     /* PLAYER READY */
     socket.on("playerReady", async ({ matchId, userId }) => {
       const match = await Match.findById(matchId);
@@ -181,6 +177,12 @@ module.exports = (io) => {
         io.to(matchId).emit("problemAssigned", {
           problemId: problem[0]._id,
         });
+      }
+    });
+
+    socket.on("joinMatch", ({ matchId }) => {
+      if (matchId) {
+        socket.join(matchId);
       }
     });
 
