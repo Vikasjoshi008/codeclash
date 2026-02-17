@@ -27,6 +27,17 @@ const OneVsOneMatch = () => {
 
   const timerRef = useRef(null);
 
+  useEffect(() => {
+    if (!user || !matchId) return;
+
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    socket.emit("registerUser", { userId: user.id });
+    socket.emit("joinMatch", { matchId, userId: user.id });
+  }, [user, matchId]);
+
   /* ================= JOIN MATCH ================= */
   useEffect(() => {
     if (!user || !matchId) return;
@@ -151,6 +162,7 @@ const OneVsOneMatch = () => {
 
   /* ================= ACTIONS ================= */
   const markReady = () => {
+    console.log("Emitting playerReady", matchId, user.id);
     socket.emit("playerReady", { matchId, userId: user.id });
     setReady(true);
   };
