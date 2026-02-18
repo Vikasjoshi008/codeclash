@@ -23,8 +23,21 @@ ${p2.code}
 
 Winner: ${winnerName}
 
-Explain why the winner won and give improvement suggestions for both players.
-            `
+You are a competitive coding judge.
+
+Give a SHORT summary (max 5 lines).
+No markdown.
+No ###.
+No code blocks.
+No special characters.
+Plain clean text only.
+
+Include:
+- Who won and why
+- Time taken by both players
+- One short improvement suggestion per player
+
+Keep it concise.`
           }
         ]
       },

@@ -16,15 +16,15 @@ import MatchHistory from "./pages/matchHistory";
 import OneVsOneMatch from "./pages/OneVsOneMatch";
 
 function App() {
-  useEffect(() => {
-    if (!socket.connected) {
-      socket.connect();
-    }
+  // useEffect(() => {
+  //   if (!socket.connected) {
+  //     socket.connect();
+  //   }
 
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
+  //   return () => {
+  //     socket.disconnect();
+  //   };
+  // }, []);
   return (
     <>
       <BrowserRouter>
