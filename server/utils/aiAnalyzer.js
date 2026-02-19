@@ -35,7 +35,7 @@ Plain clean text only.
 Include:
 - Who won and why
 - Time taken by both players
-- One short improvement suggestion per player
+- give five bullet points on how the both players code can be improved.
 
 Keep it concise.`
           }
