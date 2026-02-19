@@ -5,12 +5,13 @@ const analyzeWithAI = async (p1, p2, winnerName) => {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "mistralai/mistral-7b-instruct",
+        model: "mistralai/devstral-2-2512:free",
+        temperature: 0.2,
         messages: [
           {
             role: "system",
             content:
-              "You are a competitive programming judge. Analyze both codes and provide suggestions."
+              "You are a strict competitive programming judge. Respond in plain text only."
           },
           {
             role: "user",
@@ -18,26 +19,28 @@ const analyzeWithAI = async (p1, p2, winnerName) => {
 Player 1 Code:
 ${p1.code}
 
+Player 1 Time:
+${p1.timeTaken} ms
+
 Player 2 Code:
 ${p2.code}
 
+Player 2 Time:
+${p2.timeTaken} ms
+
 Winner: ${winnerName}
 
-You are a competitive coding judge.
-
-Give a SHORT summary (max 5 lines).
+Provide maximum 8 lines total.
 No markdown.
-No ###.
 No code blocks.
 No special characters.
-Plain clean text only.
+Plain text only.
 
-Include:
-- Who won and why
-- Time taken by both players
-- give five bullet points on how the both players code can be improved.
-
-Keep it concise.`
+Structure:
+1 line - Who won and why.
+1 line - Time comparison.
+5 short improvement points for both players combined.
+`
           }
         ]
       },
@@ -45,13 +48,14 @@ Keep it concise.`
         headers: {
           Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json"
-        }
+        },
+        timeout: 10000
       }
     );
 
-    return response.data.choices[0].message.content;
-
+    return response.data.choices?.[0]?.message?.content || "No AI response.";
   } catch (err) {
+    console.error(err.response?.data || err.message);
     return "AI analysis unavailable.";
   }
 };
