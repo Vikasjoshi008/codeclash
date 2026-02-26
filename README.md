@@ -69,7 +69,7 @@ https://codeclash-three.vercel.app
 ---
 
 ## 🔐 Authentication
-- JWT based authentication
+- JWT authentication
 - Protected routes (practice, dashboard, 1v1)
 - Token stored securely in browser storage
 
