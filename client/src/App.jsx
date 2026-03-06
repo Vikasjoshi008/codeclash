@@ -14,6 +14,7 @@ import Navbar from "./components/Navbar";
 import UserDashboard from "./pages/UserDashboard";
 import MatchHistory from "./pages/matchHistory";
 import OneVsOneMatch from "./pages/OneVsOneMatch";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
             }
           />
         </Routes>
+        <Footer />
       </BrowserRouter>
     </>
   );
