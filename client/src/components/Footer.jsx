@@ -63,7 +63,7 @@ const Footer = () => {
             </a>
 
             <a
-              href="/"
+              href="/about"
               className="transition hover:translate-x-1 hover:text-purple-400"
             >
               About

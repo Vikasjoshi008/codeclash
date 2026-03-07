@@ -15,6 +15,7 @@ import UserDashboard from "./pages/UserDashboard";
 import MatchHistory from "./pages/matchHistory";
 import OneVsOneMatch from "./pages/OneVsOneMatch";
 import Footer from "./components/Footer";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/about" element={<About />} />
         </Routes>
         <Footer />
       </BrowserRouter>
