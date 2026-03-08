@@ -16,6 +16,7 @@ import MatchHistory from "./pages/matchHistory";
 import OneVsOneMatch from "./pages/OneVsOneMatch";
 import Footer from "./components/Footer";
 import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
 
           {/* private routes */}
           <Route
@@ -77,7 +80,6 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/about" element={<About />} />
         </Routes>
         <Footer />
       </BrowserRouter>

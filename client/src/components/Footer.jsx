@@ -70,7 +70,7 @@ const Footer = () => {
             </a>
 
             <a
-              href="https://github.com/Vikasjoshi008"
+              href="/contact"
               className="transition hover:translate-x-1 hover:text-purple-400"
             >
               Contact
