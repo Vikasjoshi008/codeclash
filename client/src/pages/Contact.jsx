@@ -50,7 +50,7 @@ const Contact = () => {
         </form>
 
         <div className="mt-10 text-sm text-slate-500">
-          You can also reach out via GitHub or email if you prefer.
+          You can also reach out via GitHub or email if you prefer. Thank you!
         </div>
       </div>
     </div>
